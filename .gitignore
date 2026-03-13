@@ -1,0 +1,28 @@
+## Node / JavaScript
+node_modules/
+dist/
+build/
+coverage/
+
+## PHP / Composer
+vendor/
+*.log
+*.cache
+*.sql
+.env
+.env.*
+composer.lock
+
+## IDEs & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+## Generated / misc
+*.tmp
+*.bak
+*.swp
+
+## GLC/Project specific
+*.processed.glc

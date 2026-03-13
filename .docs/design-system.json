@@ -1,0 +1,69 @@
+{
+  "name": "reference-design-system",
+  "version": "1.0.0",
+  "tokens": {
+    "color": {
+      "background": "#f2f4f1",
+      "panel": "#fbfcf8",
+      "text": "#1f2a24",
+      "muted": "#5e6c63",
+      "line": "#d0d8d1",
+      "accent": "#2f6d4e",
+      "error": "#b42318",
+      "warn": "#b26d00",
+      "buttonGradientStart": "#3e8360",
+      "buttonGradientEnd": "#2f6d4e",
+      "dropZoneBg": "#f8fbf7",
+      "dropZoneHoverBg": "#edf7f1",
+      "debugBg": "#f4f7f3",
+      "surface": "#ffffff"
+    },
+    "typography": {
+      "fontFamily": "\"Segoe UI\", Tahoma, sans-serif",
+      "fontSizeBase": "16px",
+      "h1Size": "1.1rem",
+      "mutedSize": "0.92rem",
+      "small": "0.9rem"
+    },
+    "spacing": {
+      "xs": "6px",
+      "sm": "8px",
+      "md": "12px",
+      "lg": "14px",
+      "xl": "16px"
+    },
+    "radii": {
+      "sm": "8px",
+      "md": "10px",
+      "lg": "12px"
+    },
+    "shadows": {
+      "panel": "0 8px 24px rgba(31, 42, 36, 0.06)"
+    },
+    "components": {
+      "button": {
+        "backgroundGradient": ["#3e8360", "#2f6d4e"],
+        "textColor": "#ffffff",
+        "borderRadius": "8px",
+        "padding": "9px 10px",
+        "fontSize": "0.95rem"
+      },
+      "input": {
+        "background": "#ffffff",
+        "borderColor": "#d0d8d1",
+        "borderRadius": "8px",
+        "padding": "9px 10px",
+        "fontSize": "0.95rem"
+      },
+      "dropZone": {
+        "borderStyle": "2px dashed",
+        "borderColor": "#d0d8d1",
+        "borderRadius": "10px",
+        "background": "#f8fbf7",
+        "hoverBorderColor": "#2f6d4e",
+        "hoverBackground": "#edf7f1"
+      }
+    }
+  },
+  "usage": "Use these tokens to derive CSS variables or apply directly in components. See tokens.color, tokens.typography and tokens.components for mappings."
+}
