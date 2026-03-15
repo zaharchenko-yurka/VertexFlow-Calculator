@@ -68,13 +68,11 @@ vertexflow-calculator/
 │       ├── logic/
 │       │   ├── SpecialCutProcessor.js
 │       │   ├── AngleFinder.js
-│       │   ├── ContourTransformer.js
-│       │   └── StateManager.js
+│       │   └── ContourTransformer.js
 │       ├── utils/
 │       │   ├── glcParser.js
 │       │   ├── glcBuilder.js
 │       │   ├── geometryUtils.js
-│       │   ├── circleIntersection.js
 │       │   └── processingLogger.js
 │       └── app.js
 ├── specs/003-special-cut-glc-3/
