@@ -65,5 +65,21 @@
       }
     }
   },
-  "usage": "Use these tokens to derive CSS variables or apply directly in components. See tokens.color, tokens.typography and tokens.components for mappings."
+  "usage": "Use these tokens to derive CSS variables or apply directly in components. See tokens.color, tokens.typography and tokens.components for mappings.",
+  "reusedAssets": {
+    "source": "D:\\repos\\arkulatoro_crack\\dxf-glc-converter",
+    "importedDate": "2026-03-15",
+    "cssFile": "assets/style.css",
+    "jsModules": [
+      "assets/js/svgRenderer.js",
+      "assets/js/glcBuilder.js",
+      "assets/js/unitConverter.js"
+    ],
+    "documentation": "assets/README.md",
+    "removedModules": [
+      "dxfParser.js - не нужен (проект работает с GLC, а не DXF)",
+      "contourBuilder.js - не нужен (контуры уже есть в GLC)",
+      "splineProcessor.js - не нужен (только для DXF сплайнов)"
+    ]
+  }
 }
