@@ -4,7 +4,8 @@ export function createProcessingLog({
   errors,
   durationMs,
   totalContours,
-  totalVertices
+  totalVertices,
+  debug = null
 }) {
   return {
     timestamp: new Date().toISOString(),
@@ -13,7 +14,8 @@ export function createProcessingLog({
     totalVertices,
     results,
     errors,
-    durationMs
+    durationMs,
+    debug
   };
 }
 

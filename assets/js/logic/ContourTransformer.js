@@ -6,7 +6,17 @@ import {
   SHORT_INCREMENT_PERCENT,
   NEAR_INCREMENT_MM
 } from '../utils/config.js';
-import { distance, findCircleIntersection, computeAngle } from '../utils/geometryUtils.js';
+import { distance, findCircleIntersection } from '../utils/geometryUtils.js';
+
+export const CONTOUR_TRANSFORMER_VERSION = '2026-03-17-fix-split-index-v2';
+
+const SPLIT_EPSILON = 1e-6;
+let splitCounter = 0;
+
+function createSplitId(prefix) {
+  splitCounter += 1;
+  return `${prefix}-${Date.now()}-${splitCounter}`;
+}
 
 function cloneContour(contour) {
   return {
@@ -33,6 +43,39 @@ function recomputeSegments(contour) {
     const start = contour.vertices[segment.startIndex];
     const end = contour.vertices[segment.endIndex];
     segment.length = distance(start, end);
+  });
+}
+
+function getSegmentLength(contour, segment) {
+  const start = contour.vertices[segment.startIndex];
+  const end = contour.vertices[segment.endIndex];
+  return distance(start, end);
+}
+
+function findConnectedSegmentIndices(contour, vertexIndex) {
+  let prevSegIndex = -1;
+  let nextSegIndex = -1;
+
+  contour.segments.forEach((segment, index) => {
+    if (segment.endIndex === vertexIndex) {
+      prevSegIndex = index;
+    }
+    if (segment.startIndex === vertexIndex) {
+      nextSegIndex = index;
+    }
+  });
+
+  return { prevSegIndex, nextSegIndex };
+}
+
+function shiftSegmentIndicesAfterInsert(contour, insertIndex) {
+  contour.segments.forEach((segment) => {
+    if (segment.startIndex >= insertIndex) {
+      segment.startIndex += 1;
+    }
+    if (segment.endIndex >= insertIndex) {
+      segment.endIndex += 1;
+    }
   });
 }
 
@@ -65,58 +108,55 @@ function pointAlongSegment(startVertex, endVertex, distanceFromStart) {
  */
 function splitSegmentAtDistance(contour, segmentIndex, distanceFromStart) {
   const segment = contour.segments[segmentIndex];
+  if (!segment) {
+    return null;
+  }
+
   const startVertex = contour.vertices[segment.startIndex];
   const endVertex = contour.vertices[segment.endIndex];
-  
-  // Calculate the new vertex position
-  const newVertexPos = pointAlongSegment(startVertex, endVertex, distanceFromStart);
-  
-  // Create new vertex
+  const segmentLength = distance(startVertex, endVertex);
+  const splitDistance = Math.max(0, Math.min(distanceFromStart, segmentLength));
+
+  // Ignore degenerate splits at segment boundaries.
+  if (splitDistance <= SPLIT_EPSILON || segmentLength - splitDistance <= SPLIT_EPSILON) {
+    return null;
+  }
+
+  const newVertexPos = pointAlongSegment(startVertex, endVertex, splitDistance);
+  const insertIndex = segment.endIndex === 0 ? contour.vertices.length : segment.endIndex;
+
   const newVertex = {
-    id: `split-${segmentIndex}-${Date.now()}`,
-    name: '', // Will be renamed later
+    id: createSplitId(`split-${segmentIndex}`),
+    name: '',
     x: newVertexPos.x,
     y: newVertexPos.y,
     isAnglePoint: false,
     originalIndex: segment.startIndex
   };
-  
-  // Insert new vertex at the position after startVertex
-  const insertIndex = segment.startIndex + 1;
+
   contour.vertices.splice(insertIndex, 0, newVertex);
-  
-  // The segment indices after insertion:
-  // - The original segment now ends at the new vertex (its endIndex increased by 1)
-  // - We need to create a new segment from new vertex to the original end vertex
-  const newSegmentStartIndex = insertIndex;
-  const newSegmentEndIndex = segment.endIndex + 1; // Original end index shifted by 1
-  
-  // Update original segment to end at new vertex
-  segment.endIndex = newSegmentStartIndex;
-  segment.length = distanceFromStart;
+  shiftSegmentIndicesAfterInsert(contour, insertIndex);
+
+  const shiftedOriginalEndIndex = segment.endIndex;
+  segment.endIndex = insertIndex;
+  segment.length = distance(contour.vertices[segment.startIndex], contour.vertices[insertIndex]);
   segment.hasArc = false;
   segment.arcInfo = null;
-  
-  // Create new segment from new vertex to original end
+
   const newSegment = {
-    id: `seg-split-${segmentIndex}-${Date.now()}`,
-    startIndex: newSegmentStartIndex,
-    endIndex: newSegmentEndIndex,
-    length: distance(newVertex, endVertex),
+    id: createSplitId(`seg-split-${segmentIndex}`),
+    startIndex: insertIndex,
+    endIndex: shiftedOriginalEndIndex,
+    length: distance(contour.vertices[insertIndex], contour.vertices[shiftedOriginalEndIndex]),
     hasArc: false,
+    arcInfo: null,
     metadata: {}
   };
-  
-  // Insert the new segment after the original segment
+
   contour.segments.splice(segmentIndex + 1, 0, newSegment);
-  
-  console.log(`[SPLIT] Segment ${segmentIndex} split at ${distanceFromStart.toFixed(1)}mm`);
-  console.log(`        New vertex at (${newVertex.x.toFixed(1)}, ${newVertex.y.toFixed(1)})`);
-  console.log(`        Original segment now: ${segment.startIndex} -> ${segment.endIndex} (${segment.length.toFixed(1)}mm)`);
-  console.log(`        New segment: ${newSegment.startIndex} -> ${newSegment.endIndex} (${newSegment.length.toFixed(1)}mm)`);
-  
+
   return {
-    newVertex,
+    newVertex: contour.vertices[insertIndex],
     newVertexIndex: insertIndex,
     newSegment,
     originalSegment: segment
@@ -127,50 +167,97 @@ export function transformContour(contour, internalAngles, options = {}) {
   const { skipColumns = true } = options;
   const updated = cloneContour(contour);
   const transformations = [];
-  const skipped = new Set();
+  const skippedVertexIds = new Set();
   let processedCount = 0;
   let skippedCount = 0;
 
-  const angleIndices = internalAngles.map((a) => a.index);
+  const angleTargets = internalAngles
+    .map((angle, order) => ({
+      ...angle,
+      order,
+      vertexId: contour.vertices[angle.index]?.id ?? null
+    }))
+    .filter((angle) => angle.vertexId !== null);
 
-  internalAngles.forEach((angle, idx) => {
-    if (skipped.has(angle.index)) {
+  const markSkipped = (vertexId) => {
+    if (!skippedVertexIds.has(vertexId)) {
+      skippedVertexIds.add(vertexId);
+      skippedCount += 1;
+    }
+  };
+
+  angleTargets.forEach((angle, idx) => {
+    if (skippedVertexIds.has(angle.vertexId)) {
       return;
     }
 
-    const currentIndex = angle.index;
-    const nextAngleIndex = internalAngles[idx + 1]?.index ?? null;
-    const currentVertex = updated.vertices[currentIndex];
+    const currentIndex = updated.vertices.findIndex((vertex) => vertex.id === angle.vertexId);
+    if (currentIndex === -1) {
+      return;
+    }
 
-    if (skipColumns && nextAngleIndex !== null) {
-      const nextVertex = updated.vertices[nextAngleIndex];
-      if (distance(currentVertex, nextVertex) < COLUMN_DISTANCE_THRESHOLD) {
-        skipped.add(currentIndex);
-        skipped.add(nextAngleIndex);
-        skippedCount += 2;
+    const currentVertex = updated.vertices[currentIndex];
+    let { prevSegIndex, nextSegIndex } = findConnectedSegmentIndices(updated, currentIndex);
+
+    if (prevSegIndex === -1 || nextSegIndex === -1) {
+      markSkipped(angle.vertexId);
+      transformations.push({
+        id: `t-fail-topology-${currentIndex}`,
+        type: 'INVALID_TOPOLOGY',
+        vertexIndex: currentIndex,
+        vertexName: currentVertex.name,
+        angleDegrees: angle.angle,
+        prevSegmentIndex: prevSegIndex,
+        nextSegmentIndex: nextSegIndex,
+        fallbackUsed: true,
+        reason: 'SEGMENT_TOPOLOGY_MISMATCH'
+      });
+      return;
+    }
+
+    if (skipColumns && idx + 1 < angleTargets.length) {
+      const nextAngle = angleTargets[idx + 1];
+      const nextAngleIndex = updated.vertices.findIndex((vertex) => vertex.id === nextAngle.vertexId);
+      const nextVertex = nextAngleIndex !== -1 ? updated.vertices[nextAngleIndex] : null;
+
+      if (
+        nextVertex
+        && !skippedVertexIds.has(nextAngle.vertexId)
+        && nextAngleIndex !== currentIndex
+        && distance(currentVertex, nextVertex) < COLUMN_DISTANCE_THRESHOLD
+      ) {
+        const currentPrevSeg = updated.segments[prevSegIndex];
+        const currentNextSeg = updated.segments[nextSegIndex];
+        const nextConnections = findConnectedSegmentIndices(updated, nextAngleIndex);
+        const nextPrevSeg = nextConnections.prevSegIndex === -1 ? null : updated.segments[nextConnections.prevSegIndex];
+        const nextNextSeg = nextConnections.nextSegIndex === -1 ? null : updated.segments[nextConnections.nextSegIndex];
+
+        markSkipped(angle.vertexId);
+        markSkipped(nextAngle.vertexId);
+
         transformations.push({
           id: `t-skip-col-${currentIndex}`,
           type: 'SKIPPED_COLUMN',
           vertexIndex: currentIndex,
           vertexName: currentVertex.name,
           angleDegrees: angle.angle,
-          prevSegmentIndex: (currentIndex - 1 + updated.segments.length) % updated.segments.length,
-          nextSegmentIndex: currentIndex,
-          prevSegmentLength: updated.segments[(currentIndex - 1 + updated.segments.length) % updated.segments.length].length,
-          nextSegmentLength: updated.segments[currentIndex].length,
+          prevSegmentIndex: prevSegIndex,
+          nextSegmentIndex: nextSegIndex,
+          prevSegmentLength: currentPrevSeg ? getSegmentLength(updated, currentPrevSeg) : 0,
+          nextSegmentLength: currentNextSeg ? getSegmentLength(updated, currentNextSeg) : 0,
           fallbackUsed: false,
           reason: 'COLUMN_DISTANCE_THRESHOLD'
         });
         transformations.push({
-          id: `t-skip-col-${nextAngleIndex}`,
+          id: `t-skip-col-${nextAngle.vertexId}`,
           type: 'SKIPPED_COLUMN',
           vertexIndex: nextAngleIndex,
           vertexName: nextVertex.name,
-          angleDegrees: internalAngles[idx + 1]?.angle ?? 0,
-          prevSegmentIndex: (nextAngleIndex - 1 + updated.segments.length) % updated.segments.length,
-          nextSegmentIndex: nextAngleIndex,
-          prevSegmentLength: updated.segments[(nextAngleIndex - 1 + updated.segments.length) % updated.segments.length].length,
-          nextSegmentLength: updated.segments[nextAngleIndex].length,
+          angleDegrees: nextAngle.angle,
+          prevSegmentIndex: nextConnections.prevSegIndex,
+          nextSegmentIndex: nextConnections.nextSegIndex,
+          prevSegmentLength: nextPrevSeg ? getSegmentLength(updated, nextPrevSeg) : 0,
+          nextSegmentLength: nextNextSeg ? getSegmentLength(updated, nextNextSeg) : 0,
           fallbackUsed: false,
           reason: 'COLUMN_DISTANCE_THRESHOLD'
         });
@@ -178,18 +265,15 @@ export function transformContour(contour, internalAngles, options = {}) {
       }
     }
 
-    const prevSegIndex = (currentIndex - 1 + updated.segments.length) % updated.segments.length;
-    const nextSegIndex = currentIndex;
     const prevSeg = updated.segments[prevSegIndex];
     const nextSeg = updated.segments[nextSegIndex];
 
-    const prevLen = prevSeg.length;
-    const nextLen = nextSeg.length;
+    const prevLen = getSegmentLength(updated, prevSeg);
+    const nextLen = getSegmentLength(updated, nextSeg);
     const minLen = Math.min(prevLen, nextLen);
 
     if (minLen < MIN_SKIP_LENGTH) {
-      skipped.add(currentIndex);
-      skippedCount += 1;
+      markSkipped(angle.vertexId);
       transformations.push({
         id: `t-skip-short-${currentIndex}`,
         type: 'SKIPPED_SHORT_SEGMENT',
@@ -211,6 +295,8 @@ export function transformContour(contour, internalAngles, options = {}) {
     let incrementMm = 0;
     let incrementPercent = null;
     let type = 'SPLIT_BOTH_SEGMENTS';
+    let splitPrev = false;
+    let splitNext = false;
 
     if (minLen < SPLIT_THRESHOLD_SHORT) {
       basePrev = minLen;
@@ -218,109 +304,77 @@ export function transformContour(contour, internalAngles, options = {}) {
       incrementPercent = SHORT_INCREMENT_PERCENT;
       incrementMm = (minLen * SHORT_INCREMENT_PERCENT) / 100;
       type = 'SPLIT_SHORT_SEGMENT';
+
+      if (prevLen - nextLen > SPLIT_EPSILON) {
+        splitPrev = true;
+      } else if (nextLen - prevLen > SPLIT_EPSILON) {
+        splitNext = true;
+      }
     } else {
       basePrev = Math.min(prevLen, NEAR_ANGLE_SEGMENT);
       baseNext = Math.min(nextLen, NEAR_ANGLE_SEGMENT);
       incrementMm = NEAR_INCREMENT_MM;
       type = 'SPLIT_BOTH_SEGMENTS';
+      splitPrev = prevLen - basePrev > SPLIT_EPSILON;
+      splitNext = nextLen - baseNext > SPLIT_EPSILON;
     }
 
-    const prevVertex = updated.vertices[(currentIndex - 1 + updated.vertices.length) % updated.vertices.length];
-    const nextVertex = updated.vertices[(currentIndex + 1) % updated.vertices.length];
+    let prevSplitVertex = null;
+    let nextSplitVertex = null;
 
-    // FIX: Calculate split points on segments BEFORE finding circle intersection
-    // According to FR-005:
-    // - Short segment case: split longer segment so new adjacent segment = shorter segment length
-    // - Normal case: split both segments at 100mm from corner
-    // These split points become the circle centers, NOT the original vertices
-    const prevSplitPoint = pointAlongSegment(currentVertex, prevVertex, basePrev);
-    const nextSplitPoint = pointAlongSegment(currentVertex, nextVertex, baseNext);
+    if (splitPrev) {
+      const currentIndexBeforeSplit = updated.vertices.findIndex((vertex) => vertex.id === angle.vertexId);
+      const prevConnection = findConnectedSegmentIndices(updated, currentIndexBeforeSplit);
+      const prevSegmentToSplit = updated.segments[prevConnection.prevSegIndex];
+      const prevSegmentLength = getSegmentLength(updated, prevSegmentToSplit);
+      const splitDistanceFromStart = prevSegmentLength - basePrev;
+      const splitResult = splitSegmentAtDistance(updated, prevConnection.prevSegIndex, splitDistanceFromStart);
+      if (splitResult) {
+        prevSplitVertex = splitResult.newVertex;
+      }
+    }
 
-    console.log(`[FIX] Split points: prevSplit at ${basePrev.toFixed(1)}mm from corner, nextSplit at ${baseNext.toFixed(1)}mm from corner`);
-    console.log(`       prevSplitPoint: (${prevSplitPoint.x.toFixed(1)}, ${prevSplitPoint.y.toFixed(1)})`);
-    console.log(`       nextSplitPoint: (${nextSplitPoint.x.toFixed(1)}, ${nextSplitPoint.y.toFixed(1)})`);
+    if (splitNext) {
+      const currentIndexBeforeSplit = updated.vertices.findIndex((vertex) => vertex.id === angle.vertexId);
+      const nextConnection = findConnectedSegmentIndices(updated, currentIndexBeforeSplit);
+      const splitResult = splitSegmentAtDistance(updated, nextConnection.nextSegIndex, baseNext);
+      if (splitResult) {
+        nextSplitVertex = splitResult.newVertex;
+      }
+    }
 
-    // ACTUALLY split the segments by inserting new vertices into the contour
-    // This creates the visual split points that should appear on the preview
-    console.log(`[SPLIT] About to split segments for angle at index ${currentIndex}...`);
-    console.log(`        Current vertices count: ${updated.vertices.length}`);
-    console.log(`        Current segments count: ${updated.segments.length}`);
-    
-    // Split prev segment (from currentIndex-1 to currentIndex)
-    // Note: prevSegIndex connects (currentIndex-1) -> currentIndex
-    const prevSplitResult = splitSegmentAtDistance(updated, prevSegIndex, basePrev);
-    
-    // After splitting prev segment, the vertex indices shift if we inserted before currentIndex
-    // But since we split at prevSeg which ends at currentIndex, the insertion is at currentIndex
-    // Recalculate indices for next segment split
-    // The next segment goes from currentIndex -> currentIndex+1
-    // Since we may have added a vertex, we need to recalculate nextSegIndex
-    const newNextSegIndex = currentIndex; // The segment after current vertex
-    const nextSplitResult = splitSegmentAtDistance(updated, newNextSegIndex, baseNext);
-    
-    console.log(`[SPLIT] After splitting:`);
-    console.log(`        New vertices count: ${updated.vertices.length}`);
-    console.log(`        New segments count: ${updated.segments.length}`);
-    
-    // After splitting, the current vertex index CHANGES because we inserted new vertices before it
-    // The original vertex at currentIndex is now at currentIndex + 2 (we inserted 2 vertices)
-    // We need to find the current vertex's NEW index
-    // The new split vertices are at prevSplitResult.newVertexIndex and nextSplitResult.newVertexIndex
-    // The current vertex should be between them
-    const newCurrentIndex = prevSplitResult.newVertexIndex + 1;
-    const currentVertexAfterSplit = updated.vertices[newCurrentIndex];
-    
-    console.log(`[INDEX] Original currentIndex: ${currentIndex}, newCurrentIndex: ${newCurrentIndex}`);
-    console.log(`[INDEX] Current vertex after split: ${currentVertexAfterSplit.name} at (${currentVertexAfterSplit.x.toFixed(1)}, ${currentVertexAfterSplit.y.toFixed(1)})`);
-    
-    // The split points are now at indices: prevSplitResult.newVertexIndex and nextSplitResult.newVertexIndex
-    const prevSplitVertex = updated.vertices[prevSplitResult.newVertexIndex];
-    const nextSplitVertex = updated.vertices[nextSplitResult.newVertexIndex];
-    
-    console.log(`[SPLIT] Prev split vertex index: ${prevSplitResult.newVertexIndex}, position: (${prevSplitVertex.x.toFixed(1)}, ${prevSplitVertex.y.toFixed(1)})`);
-    console.log(`[SPLIT] Next split vertex index: ${nextSplitResult.newVertexIndex}, position: (${nextSplitVertex.x.toFixed(1)}, ${nextSplitVertex.y.toFixed(1)})`);
+    const currentIndexAfterSplit = updated.vertices.findIndex((vertex) => vertex.id === angle.vertexId);
+    const currentVertexAfterSplit = updated.vertices[currentIndexAfterSplit];
+    const finalConnections = findConnectedSegmentIndices(updated, currentIndexAfterSplit);
+    const updatedPrevSegIndex = finalConnections.prevSegIndex;
+    const updatedNextSegIndex = finalConnections.nextSegIndex;
+    const updatedPrevSeg = updated.segments[updatedPrevSegIndex];
+    const updatedNextSeg = updated.segments[updatedNextSegIndex];
+
+    const prevCenter = prevSplitVertex ?? updated.vertices[updatedPrevSeg.startIndex];
+    const nextCenter = nextSplitVertex ?? updated.vertices[updatedNextSeg.endIndex];
 
     const preferredPoint = { x: currentVertexAfterSplit.x, y: currentVertexAfterSplit.y };
     const expectedSign = Math.sign(angle.cross || 0) || -1;
 
-    // DEBUG: Log circle parameters to diagnose intersection failure
-    // Now using the actual split vertices from the contour
-    const radius1 = basePrev + incrementMm;
-    const radius2 = baseNext + incrementMm;
-    const centerDistance = distance(prevSplitVertex, nextSplitVertex);
-    console.log(`[DEBUG] Angle ${newCurrentIndex} (${currentVertexAfterSplit.name}):`);
-    console.log(`  Segment lengths: prev=${prevLen.toFixed(1)}mm, next=${nextLen.toFixed(1)}mm`);
-    console.log(`  Type: ${type}`);
-    console.log(`  Radii: r1=${radius1.toFixed(1)}mm, r2=${radius2.toFixed(1)}mm`);
-    console.log(`  Centers: prevSplitVertex at (${prevSplitVertex.x.toFixed(1)}, ${prevSplitVertex.y.toFixed(1)})`);
-    console.log(`          nextSplitVertex at (${nextSplitVertex.x.toFixed(1)}, ${nextSplitVertex.y.toFixed(1)})`);
-    console.log(`  Center distance: ${centerDistance.toFixed(1)}mm`);
-    console.log(`  Sum of radii: ${(radius1 + radius2).toFixed(1)}mm`);
-    console.log(`  Can intersect: ${centerDistance <= radius1 + radius2 ? 'YES' : 'NO - TOO FAR APART'}`);
-
-    const { point, fallbackUsed, iterations } = findCircleIntersection(
-      prevSplitVertex,
+    const { point, fallbackUsed } = findCircleIntersection(
+      prevCenter,
       basePrev + incrementMm,
-      nextSplitVertex,
+      nextCenter,
       baseNext + incrementMm,
       {
         preferredPoint,
         expectedCrossSign: expectedSign,
         crossCheck: (candidate) => {
-          const cross = (prevSplitVertex.x - candidate.x) * (nextSplitVertex.y - candidate.y)
-            - (prevSplitVertex.y - candidate.y) * (nextSplitVertex.x - candidate.x);
+          const cross = (prevCenter.x - candidate.x) * (nextCenter.y - candidate.y)
+            - (prevCenter.y - candidate.y) * (nextCenter.x - candidate.x);
           return cross;
         }
       }
     );
-    
-    // DEBUG: Log detailed intersection result
-    console.log(`  Circle intersection result: point=${point ? `(${point.x.toFixed(1)}, ${point.y.toFixed(1)})` : 'null'}, fallbackUsed=${fallbackUsed}, iterations=${iterations}`);
 
     if (!point) {
-      console.log(`  RESULT: Circle intersection FAILED (fallbackUsed=${fallbackUsed})`);
-      skipped.add(currentIndex);
-      skippedCount += 1;
+      markSkipped(angle.vertexId);
       transformations.push({
         id: `t-fail-${currentIndex}`,
         type,
@@ -341,58 +395,31 @@ export function transformContour(contour, internalAngles, options = {}) {
 
     currentVertexAfterSplit.x = point.x;
     currentVertexAfterSplit.y = point.y;
-    console.log(`  RESULT: SUCCESS - new vertex at (${point.x.toFixed(1)}, ${point.y.toFixed(1)})`);
-    
-    // After splitting, we need to find the segments that now connect to currentVertex
-    // The segment before currentVertex now ends at currentVertex (was split)
-    // The segment after currentVertex now starts at currentVertex (was split)
-    // Let's find and update them
-    console.log(`[UPDATE] Looking for segments connected to vertex index ${newCurrentIndex}...`);
-    console.log(`[UPDATE] Total segments: ${updated.segments.length}, iterating...`);
-    
-    const updatedPrevSegIndex = updated.segments.findIndex(
-      (s, i) => {
-        const found = s.endIndex === newCurrentIndex;
-        if (found) console.log(`[UPDATE] Found prev segment at index ${i}: start=${s.startIndex}, end=${s.endIndex}`);
-        return found;
-      }
-    );
-    const updatedNextSegIndex = updated.segments.findIndex(
-      (s, i) => {
-        const found = s.startIndex === newCurrentIndex;
-        if (found) console.log(`[UPDATE] Found next segment at index ${i}: start=${s.startIndex}, end=${s.endIndex}`);
-        return found;
-      }
-    );
-    
-    console.log(`[UPDATE] Result: updatedPrevSegIndex=${updatedPrevSegIndex}, updatedNextSegIndex=${updatedNextSegIndex}`);
-    
+
     if (updatedPrevSegIndex !== -1) {
       updated.segments[updatedPrevSegIndex].hasArc = false;
       updated.segments[updatedPrevSegIndex].arcInfo = null;
-      console.log(`[UPDATE] Updated prev segment at index ${updatedPrevSegIndex}`);
     }
     if (updatedNextSegIndex !== -1) {
       updated.segments[updatedNextSegIndex].hasArc = false;
       updated.segments[updatedNextSegIndex].arcInfo = null;
-      console.log(`[UPDATE] Updated next segment at index ${updatedNextSegIndex}`);
     }
 
     transformations.push({
-      id: `t-${newCurrentIndex}`,
+      id: `t-${currentIndexAfterSplit}`,
       type,
-      vertexIndex: newCurrentIndex,
+      vertexIndex: currentIndexAfterSplit,
       vertexName: currentVertexAfterSplit.name,
       angleDegrees: angle.angle,
       prevSegmentIndex: updatedPrevSegIndex !== -1 ? updatedPrevSegIndex : prevSegIndex,
-      nextSegmentIndex: updatedNextSegIndex !== -1 ? updatedNextSegIndex : newNextSegIndex,
+      nextSegmentIndex: updatedNextSegIndex !== -1 ? updatedNextSegIndex : nextSegIndex,
       prevSegmentLength: prevLen,
       nextSegmentLength: nextLen,
       incrementMm,
       incrementPercent,
       newVertex: { ...currentVertexAfterSplit },
-      prevSplitVertex: { ...prevSplitVertex },
-      nextSplitVertex: { ...nextSplitVertex },
+      prevSplitVertex: { ...prevCenter },
+      nextSplitVertex: { ...nextCenter },
       fallbackUsed
     });
     processedCount += 1;
