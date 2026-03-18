@@ -6,28 +6,6 @@ function createSvgElement(tag, attrs = {}) {
   return el;
 }
 
-function computeBounds(contours) {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-
-  contours.forEach((contour) => {
-    contour.vertices.forEach((vertex) => {
-      minX = Math.min(minX, vertex.x);
-      minY = Math.min(minY, vertex.y);
-      maxX = Math.max(maxX, vertex.x);
-      maxY = Math.max(maxY, vertex.y);
-    });
-  });
-
-  if (!Number.isFinite(minX)) {
-    return { minX: 0, minY: 0, maxX: 100, maxY: 100 };
-  }
-
-  return { minX, minY, maxX, maxY };
-}
-
 export function createContourPreview() {
   const wrapper = document.createElement('section');
   wrapper.className = 'panel preview';
@@ -78,14 +56,112 @@ export function createContourPreview() {
       return;
     }
 
-    const bounds = computeBounds(contours);
+    // Calculate bounds for each contour separately and add offsets
+    const CONTOUR_OFFSET_X = 2000; // mm between contours horizontally
+    const CONTOUR_OFFSET_Y = 2000; // mm between contours vertically
+
+    let globalMinX = Infinity;
+    let globalMinY = Infinity;
+    let globalMaxX = -Infinity;
+    let globalMaxY = -Infinity;
+
+    // First pass: calculate bounds for each contour
+    const contourBounds = contours.map((contour) => {
+      const bounds = {
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity
+      };
+
+      contour.vertices.forEach((vertex) => {
+        bounds.minX = Math.min(bounds.minX, vertex.x);
+        bounds.minY = Math.min(bounds.minY, vertex.y);
+        bounds.maxX = Math.max(bounds.maxX, vertex.x);
+        bounds.maxY = Math.max(bounds.maxY, vertex.y);
+      });
+
+      if (!Number.isFinite(bounds.minX)) {
+        return { minX: 0, minY: 0, maxX: 100, maxY: 100, width: 100, height: 100 };
+      }
+
+      return {
+        ...bounds,
+        width: bounds.maxX - bounds.minX,
+        height: bounds.maxY - bounds.minY
+      };
+    });
+
+    // Second pass: calculate offsets for each contour
+    const CONTOURS_PER_ROW = 3;
+    const rowHeights = [];
+    const rowYPositions = [];
+
+    // Calculate row heights first
+    for (let row = 0; row < Math.ceil(contours.length / CONTOURS_PER_ROW); row++) {
+      const startIndex = row * CONTOURS_PER_ROW;
+      const endIndex = Math.min(startIndex + CONTOURS_PER_ROW, contours.length);
+      let maxRowHeight = 0;
+      for (let i = startIndex; i < endIndex; i++) {
+        maxRowHeight = Math.max(maxRowHeight, contourBounds[i].height);
+      }
+      rowHeights[row] = maxRowHeight;
+    }
+
+    // Calculate Y position for each row
+    let currentY = 0;
+    for (let row = 0; row < rowHeights.length; row++) {
+      rowYPositions[row] = currentY;
+      currentY += rowHeights[row] + CONTOUR_OFFSET_Y;
+    }
+
+    // Calculate offsets for each contour
+    const contourOffsets = contours.map((contour, contourIndex) => {
+      const bounds = contourBounds[contourIndex];
+      const row = Math.floor(contourIndex / CONTOURS_PER_ROW);
+      const col = contourIndex % CONTOURS_PER_ROW;
+
+      // Calculate X position for this column in this row
+      let currentX = 0;
+      for (let c = 0; c < col; c++) {
+        const colIndex = row * CONTOURS_PER_ROW + c;
+        if (colIndex < contours.length) {
+          currentX += contourBounds[colIndex].width + CONTOUR_OFFSET_X;
+        }
+      }
+
+      const offsetX = currentX;
+      const offsetY = rowYPositions[row];
+
+      // Update global bounds
+      const offsetMinX = bounds.minX + offsetX;
+      const offsetMinY = bounds.minY + offsetY;
+      const offsetMaxX = bounds.maxX + offsetX;
+      const offsetMaxY = bounds.maxY + offsetY;
+
+      globalMinX = Math.min(globalMinX, offsetMinX);
+      globalMinY = Math.min(globalMinY, offsetMinY);
+      globalMaxX = Math.max(globalMaxX, offsetMaxX);
+      globalMaxY = Math.max(globalMaxY, offsetMaxY);
+
+      return { offsetX, offsetY, bounds };
+    });
+
+    // Handle empty contours
+    if (!Number.isFinite(globalMinX)) {
+      globalMinX = 0;
+      globalMinY = 0;
+      globalMaxX = 100;
+      globalMaxY = 100;
+    }
+
     const padding = 40;
-    const width = Math.max(1, bounds.maxX - bounds.minX);
-    const height = Math.max(1, bounds.maxY - bounds.minY);
+    const width = Math.max(1, globalMaxX - globalMinX);
+    const height = Math.max(1, globalMaxY - globalMinY);
 
     state.baseViewBox = {
-      x: bounds.minX - padding,
-      y: bounds.minY - padding,
+      x: globalMinX - padding,
+      y: globalMinY - padding,
       w: width + padding * 2,
       h: height + padding * 2
     };
@@ -95,7 +171,9 @@ export function createContourPreview() {
     const viewport = createSvgElement('g');
     svg.appendChild(viewport);
 
-    contours.forEach((contour) => {
+    // Third pass: render contours with offsets
+    contours.forEach((contour, contourIndex) => {
+      const offset = contourOffsets[contourIndex];
       const path = createSvgElement('path', {
         fill: 'none',
         stroke: '#1f2a24',
@@ -107,7 +185,7 @@ export function createContourPreview() {
         return;
       }
       const d = points
-        .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+        .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x + offset.offsetX} ${p.y + offset.offsetY}`)
         .join(' ');
       path.setAttribute('d', `${d} Z`);
       viewport.appendChild(path);
