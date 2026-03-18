@@ -1,0 +1,658 @@
+ROOMBEGIN
+RoomName кімн. №1
+UID1 462F23FF-28EC-4A78-9FC6-3B5BE8D144AC
+RoomHeight 0
+Date1 -1
+Date2 -1
+RoomWWidth 5
+NumOrCharGgo False
+WITHOUT_POLOTNO False
+WITHOUT_HARPOON False
+POINTS
+AnglePoint 4417 1492
+AnglePoint 4417 5492
+AnglePoint 7417 5492
+AnglePoint 7417 4592
+AnglePoint 7398.4435 4473.4435
+AnglePoint 7517 4492
+AnglePoint 8417 4492
+AnglePoint 8417 1492
+POINTSEND
+OTRARCS
+WallWid3 0, 0
+WallWid3 1, 0
+WallWid3 2, 0
+WallWid3 3, 0
+WallWid3 4, 0
+WallWid3 5, 0
+WallWid3 6, 0
+WallWid3 7, 0
+OTRARCSEND
+BLUEPOINTS
+BLUEPOINTSEND
+otrlist_
+NPLine
+PoBeg 4417 1492
+PoEnd 4417 5492
+Wid1 100
+PoNumber1 1
+PoNumber2 2
+JValue 4000
+IdntBeg A
+IdntEnd B
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 4417 5492
+PoEnd 7417 5492
+Wid1 100
+PoNumber1 2
+PoNumber2 3
+JValue 3000
+IdntBeg B
+IdntEnd C
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 7417 5492
+PoEnd 7417 4592
+Wid1 100
+PoNumber1 3
+PoNumber2 4
+JValue 900
+IdntBeg C
+IdntEnd D
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 7417 4592
+PoEnd 7398.4435 4473.4435
+Wid1 100
+PoNumber1 4
+PoNumber2 5
+JValue 120
+IdntBeg D
+IdntEnd E
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 7398.4435 4473.4435
+PoEnd 7517 4492
+Wid1 100
+PoNumber1 5
+PoNumber2 6
+JValue 120
+IdntBeg E
+IdntEnd F
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 7517 4492
+PoEnd 8417 4492
+Wid1 100
+PoNumber1 6
+PoNumber2 7
+JValue 900
+IdntBeg F
+IdntEnd G
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 8417 4492
+PoEnd 8417 1492
+Wid1 100
+PoNumber1 7
+PoNumber2 8
+JValue 3000
+IdntBeg G
+IdntEnd H
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 8417 1492
+PoEnd 4417 1492
+Wid1 100
+PoNumber1 8
+PoNumber2 1
+JValue 4000
+IdntBeg H
+IdntEnd A
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+otrlist_end
+dim_lines_
+dim_lines_end
+StartPointA -1
+VIREZS
+VIREZSEND
+GlobPlanX 4417
+GlobPlanY 1492
+ALLDIMLINES
+ALLDIMLINESEND
+GValsBegin
+A 14.998144
+B 0
+C 0
+D 16.04
+E 1
+F 7
+I 0
+J 0
+G 0
+L 0
+M 0
+O 0
+P 0
+Q 0
+R 0
+GValsEnd
+GValSclad 0
+UseSclad False
+UpackID 0
+MontID 0
+RulonID 
+CWid1 0
+CHei1 0
+CWid2 0
+CHei2 0
+ROOMEND
+ROOMBEGIN
+RoomName кімн. №2
+UID1 9BB21ED8-30A9-483E-8AFA-D899271DA2F8
+RoomHeight 0
+Date1 -1
+Date2 -1
+RoomWWidth 5
+NumOrCharGgo False
+WITHOUT_POLOTNO False
+WITHOUT_HARPOON False
+POINTS
+AnglePoint 5082.19 10650.76
+AnglePoint 8767.32 10650.76
+AnglePoint 8767.32 9142.84
+AnglePoint 7843.39 9142.45
+AnglePoint 7843.63 9040.3
+AnglePoint 8767.1 9040.3
+AnglePoint 8767.32 6817.51
+AnglePoint 5078.94 6815.1
+AnglePoint 5079.34 6855.79
+AnglePoint 4058.19 6855.79
+AnglePoint 4058.19 8256.25
+AnglePoint 4982.19 8256.25
+AnglePoint 5100.7465 8237.6935
+AnglePoint 5082.19 8356.25
+POINTSEND
+OTRARCS
+WallWid3 0, 0
+WallWid3 1, 0
+WallWid3 2, 0
+WallWid3 3, 0
+WallWid3 4, 0
+WallWid3 5, 0
+WallWid3 6, 0
+WallWid3 7, 0
+WallWid3 8, 0
+WallWid3 9, 0
+WallWid3 10, 0
+WallWid3 11, 0
+WallWid3 12, 0
+WallWid3 13, 0
+OTRARCSEND
+BLUEPOINTS
+BLUEPOINTSEND
+otrlist_
+NPLine
+PoBeg 5082.19 10650.76
+PoEnd 8767.32 10650.76
+Wid1 100
+PoNumber1 1
+PoNumber2 2
+JValue 3685.13
+IdntBeg A
+IdntEnd B
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 8767.32 10650.76
+PoEnd 8767.32 9142.84
+Wid1 100
+PoNumber1 2
+PoNumber2 3
+JValue 1507.92
+IdntBeg B
+IdntEnd C
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 8767.32 9142.84
+PoEnd 7843.39 9142.45
+Wid1 100
+PoNumber1 3
+PoNumber2 4
+JValue 923.9301
+IdntBeg C
+IdntEnd D
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 7843.39 9142.45
+PoEnd 7843.63 9040.3
+Wid1 100
+PoNumber1 4
+PoNumber2 5
+JValue 102.1503
+IdntBeg D
+IdntEnd E
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 7843.63 9040.3
+PoEnd 8767.1 9040.3
+Wid1 100
+PoNumber1 5
+PoNumber2 6
+JValue 923.47
+IdntBeg E
+IdntEnd F
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 8767.1 9040.3
+PoEnd 8767.32 6817.51
+Wid1 100
+PoNumber1 6
+PoNumber2 7
+JValue 2222.79
+IdntBeg F
+IdntEnd G
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 8767.32 6817.51
+PoEnd 5078.94 6815.1
+Wid1 100
+PoNumber1 7
+PoNumber2 8
+JValue 3688.3808
+IdntBeg G
+IdntEnd H
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 5078.94 6815.1
+PoEnd 5079.34 6855.79
+Wid1 100
+PoNumber1 8
+PoNumber2 9
+JValue 40.692
+IdntBeg H
+IdntEnd I
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 5079.34 6855.79
+PoEnd 4058.19 6855.79
+Wid1 100
+PoNumber1 9
+PoNumber2 10
+JValue 1021.15
+IdntBeg I
+IdntEnd J
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 4058.19 6855.79
+PoEnd 4058.19 8256.25
+Wid1 100
+PoNumber1 10
+PoNumber2 11
+JValue 1400.46
+IdntBeg J
+IdntEnd K
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 4058.19 8256.25
+PoEnd 4982.19 8256.25
+Wid1 100
+PoNumber1 11
+PoNumber2 12
+JValue 924
+IdntBeg K
+IdntEnd L
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 4982.19 8256.25
+PoEnd 5100.7465 8237.6935
+Wid1 100
+PoNumber1 12
+PoNumber2 13
+JValue 120
+IdntBeg L
+IdntEnd M
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 5100.7465 8237.6935
+PoEnd 5082.19 8356.25
+Wid1 100
+PoNumber1 13
+PoNumber2 14
+JValue 120
+IdntBeg M
+IdntEnd N
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 5082.19 8356.25
+PoEnd 5082.19 10650.76
+Wid1 100
+PoNumber1 14
+PoNumber2 1
+JValue 2294.51
+IdntBeg N
+IdntEnd A
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+otrlist_end
+dim_lines_
+dim_lines_end
+StartPointA 1
+VIREZS
+ONEVIREZ
+LevlVal 0
+TprTipe 0
+det_number 0
+Otkos 0
+ZoneColor 16750950
+VirezLine
+PoBeg 5949, 7600
+PoEnd 5949, 8100
+PoNumber1 12
+PoNumber2 13
+END
+VirezLine
+PoBeg 5949, 8100
+PoEnd 6449, 8100
+PoNumber1 13
+PoNumber2 14
+END
+VirezLine
+PoBeg 6449, 8100
+PoEnd 6449, 7600
+PoNumber1 14
+PoNumber2 15
+END
+VirezLine
+PoBeg 6449, 7600
+PoEnd 5949, 7600
+PoNumber1 15
+PoNumber2 12
+END
+ONEVIREZEND
+VIREZSEND
+GlobPlanX 4417.19
+GlobPlanY 1492.1
+ALLDIMLINES
+ALLDIMLINESEND
+GValsBegin
+A 15.468009
+B 0
+C 0
+D 18.974583
+E 4
+F 10
+I 0
+J 0
+G 0
+L 0
+M 0
+O 0
+P 0
+Q 0
+R 0
+GValsEnd
+GValSclad 0
+UseSclad False
+UpackID 0
+MontID 0
+RulonID 
+CWid1 0
+CHei1 0
+CWid2 0
+CHei2 0
+ROOMEND
+ROOMBEGIN
+RoomName кімн. №3
+UID1 A926E194-1B96-4041-98BF-510A0995D249
+RoomHeight 0
+Date1 -1
+Date2 -1
+RoomWWidth 5
+NumOrCharGgo False
+WITHOUT_POLOTNO False
+WITHOUT_HARPOON False
+POINTS
+AnglePoint 10454.8493 3306.8475
+AnglePoint 10407.15 3416.96
+AnglePoint 10407.15 5392.93
+AnglePoint 13598 5392.93
+AnglePoint 13598 1636.41
+AnglePoint 11857.03 1455.17
+AnglePoint 9841.47 1455.17
+AnglePoint 9841.47 2042.81
+AnglePoint 10366.5726 3225.5626
+POINTSEND
+OTRARCS
+WallWid3 0, 0
+WallWid3 1, 0
+WallWid3 2, 0
+WallWid3 3, 0
+WallWid3 4, 0
+WallWid3 5, 0
+WallWid3 6, 0
+WallWid3 7, 0
+WallWid3 8, 0
+OTRARCSEND
+BLUEPOINTS
+BLUEPOINTSEND
+otrlist_
+NPLine
+PoBeg 10454.8493 3306.8475
+PoEnd 10407.15 3416.96
+Wid1 100
+PoNumber1 1
+PoNumber2 2
+JValue 120
+IdntBeg A
+IdntEnd B
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 10407.15 3416.96
+PoEnd 10407.15 5392.93
+Wid1 100
+PoNumber1 2
+PoNumber2 3
+JValue 1975.97
+IdntBeg B
+IdntEnd C
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 10407.15 5392.93
+PoEnd 13598 5392.93
+Wid1 100
+PoNumber1 3
+PoNumber2 4
+JValue 3190.85
+IdntBeg C
+IdntEnd D
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 13598 5392.93
+PoEnd 13598 1636.41
+Wid1 100
+PoNumber1 4
+PoNumber2 5
+JValue 3756.52
+IdntBeg D
+IdntEnd E
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 13598 1636.41
+PoEnd 11857.03 1455.17
+Wid1 100
+PoNumber1 5
+PoNumber2 6
+JValue 1750.3784
+IdntBeg E
+IdntEnd F
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 11857.03 1455.17
+PoEnd 9841.47 1455.17
+Wid1 100
+PoNumber1 6
+PoNumber2 7
+JValue 2015.56
+IdntBeg F
+IdntEnd G
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 9841.47 1455.17
+PoEnd 9841.47 2042.81
+Wid1 100
+PoNumber1 7
+PoNumber2 8
+JValue 587.64
+IdntBeg G
+IdntEnd H
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 9841.47 2042.81
+PoEnd 10366.5726 3225.5626
+Wid1 100
+PoNumber1 8
+PoNumber2 9
+JValue 1294.0775
+IdntBeg H
+IdntEnd I
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 10366.5726 3225.5626
+PoEnd 10454.8493 3306.8475
+Wid1 100
+PoNumber1 9
+PoNumber2 1
+JValue 120
+IdntBeg I
+IdntEnd A
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+otrlist_end
+dim_lines_
+dim_lines_end
+StartPointA 1
+VIREZS
+VIREZSEND
+GlobPlanX 9841.47
+GlobPlanY 1455.17
+ALLDIMLINES
+ALLDIMLINESEND
+GValsBegin
+A 13.095062
+B 0
+C 0
+D 14.810996
+E 1
+F 8
+I 0
+J 0
+G 0
+L 0
+M 0
+O 0
+P 0
+Q 0
+R 0
+GValsEnd
+GValSclad 0
+UseSclad False
+UpackID 0
+MontID 0
+RulonID 
+CWid1 0
+CHei1 0
+CWid2 0
+CHei2 0
+ROOMEND
