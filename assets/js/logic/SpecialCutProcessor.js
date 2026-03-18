@@ -3,9 +3,7 @@ import { buildGlcBytes } from '../utils/glcBuilder.js';
 import { findInternalAngles } from './AngleFinder.js';
 import { transformContour, CONTOUR_TRANSFORMER_VERSION } from './ContourTransformer.js';
 import { DEFAULT_STRETCH_PERCENT } from '../utils/config.js';
-import { createProcessingLog, logProcessing } from '../utils/processingLogger.js';
-
-const PROCESSOR_VERSION = '2026-03-17-debug-v1';
+import { createProcessingLog } from '../utils/processingLogger.js';
 
 function analyzeContourTopology(contour) {
   const vertexCount = contour.vertices.length;
@@ -67,13 +65,6 @@ export function processGlcFile(arrayBuffer, fileName, options = {}) {
   const start = performance.now();
   const parsed = parseGlc(arrayBuffer);
   const geometryErrors = [];
-  const logDebugBase = {
-    processorVersion: PROCESSOR_VERSION,
-    transformerVersion: CONTOUR_TRANSFORMER_VERSION,
-    optionsUsed: {
-      skipColumns: options.skipColumns !== false
-    }
-  };
 
   if (parsed.errors.some((err) => err.severity === 'error')) {
     const durationMs = Math.round(performance.now() - start);
@@ -83,10 +74,8 @@ export function processGlcFile(arrayBuffer, fileName, options = {}) {
       errors: parsed.errors,
       durationMs,
       totalContours: 0,
-      totalVertices: 0,
-      debug: logDebugBase
+      totalVertices: 0
     });
-    logProcessing(log);
     return {
       parsed,
       results: [],
@@ -148,10 +137,8 @@ export function processGlcFile(arrayBuffer, fileName, options = {}) {
     errors: [...parsed.errors, ...geometryErrors],
     durationMs,
     totalContours: parsed.rooms.length,
-    totalVertices,
-    debug: logDebugBase
+    totalVertices
   });
-  logProcessing(log);
 
   return {
     parsed,

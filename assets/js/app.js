@@ -48,7 +48,6 @@ function initApp(container) {
       resultDisplay.setResults({
         results: [],
         errors: parsed.errors,
-        log: null,
         outputBytes: null,
         fileName: null
       });
@@ -70,7 +69,6 @@ function initApp(container) {
       resultDisplay.setResults({
         results: processed.results,
         errors: processed.log?.errors || [],
-        log: processed.log,
         outputBytes: processed.outputBytes,
         fileName: getOutputName(fileState.file.name)
       });

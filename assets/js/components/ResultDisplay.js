@@ -1,6 +1,4 @@
-﻿import { exportLogToJson } from '../utils/processingLogger.js';
-
-export function createResultDisplay() {
+﻿export function createResultDisplay() {
   const wrapper = document.createElement('div');
   wrapper.className = 'field';
 
@@ -26,13 +24,7 @@ export function createResultDisplay() {
   downloadButton.textContent = 'Завантажити';
   downloadButton.disabled = true;
 
-  const logButton = document.createElement('button');
-  logButton.type = 'button';
-  logButton.textContent = 'Експортувати лог';
-  logButton.disabled = true;
-
   actions.appendChild(downloadButton);
-  actions.appendChild(logButton);
 
   wrapper.appendChild(label);
   wrapper.appendChild(stats);
@@ -42,7 +34,6 @@ export function createResultDisplay() {
 
   let currentBytes = null;
   let currentFileName = null;
-  let currentLog = null;
 
   const updateStatus = (text, type = 'info') => {
     status.textContent = text;
@@ -74,28 +65,11 @@ export function createResultDisplay() {
     URL.revokeObjectURL(url);
   });
 
-  logButton.addEventListener('click', () => {
-    if (!currentLog) {
-      return;
-    }
-    const json = exportLogToJson(currentLog);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'processing-log.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  });
-
   return {
     element: wrapper,
-    setResults: ({ results = [], errors = [], log = null, outputBytes = null, fileName = null }) => {
+    setResults: ({ results = [], errors = [], outputBytes = null, fileName = null }) => {
       currentBytes = outputBytes;
       currentFileName = fileName;
-      currentLog = log;
 
       const totalAngles = results.reduce((sum, res) => sum + res.internalAnglesFound, 0);
       const processedAngles = results.reduce((sum, res) => sum + res.internalAnglesProcessed, 0);
@@ -103,7 +77,6 @@ export function createResultDisplay() {
 
       stats.textContent = `Внутрішніх кутів: ${totalAngles}, оброблено: ${processedAngles}, пропущено: ${skippedAngles}.`;
       downloadButton.disabled = !outputBytes;
-      logButton.disabled = !log;
 
       if (errors.some((e) => e.severity === 'error')) {
         updateStatus('Виявлено помилки у файлі.', 'error');

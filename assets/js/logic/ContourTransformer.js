@@ -187,10 +187,7 @@ export function transformContour(contour, internalAngles, options = {}) {
   };
 
   angleTargets.forEach((angle, idx) => {
-    console.log('[TRANSFORM] Processing angle idx:', idx, 'vertexId:', angle.vertexId, 'skipped:', skippedVertexIds.has(angle.vertexId));
-    
     if (skippedVertexIds.has(angle.vertexId)) {
-      console.log('[TRANSFORM] Skipping already processed angle');
       return;
     }
 
@@ -283,13 +280,6 @@ export function transformContour(contour, internalAngles, options = {}) {
         && distBetweenAngles < COLUMN_DISTANCE_THRESHOLD
         && distBetweenAngles < (2 * SPLIT_THRESHOLD_SHORT)
       ) {
-        console.log('[COLUMN_SPLIT] Starting column split:', {
-          currentIndex,
-          nextAngleIndexOrig,
-          distBetweenAngles,
-          halfDistance: distBetweenAngles / 2
-        });
-
         // Split the segment between the two angles into two equal halves
         // Split the adjacent segments so new segments near angles = half the distance
         const halfDistance = distBetweenAngles / 2;
@@ -308,7 +298,6 @@ export function transformContour(contour, internalAngles, options = {}) {
           : 0;
 
         // Step 1: Split the segment connecting the two angles at half distance
-        console.log('[COLUMN_SPLIT] Step 1: Split connecting segment at halfDistance:', halfDistance);
         const splitResult = splitSegmentAtDistance(updated, originalConnectingSegIndex, halfDistance);
 
         if (!splitResult) {
@@ -353,10 +342,6 @@ export function transformContour(contour, internalAngles, options = {}) {
         const currentPrevSegLengthAfterSplit = getSegmentLength(updated, currentPrevSegAfterSplit1);
         const splitDistanceCurrent = currentPrevSegLengthAfterSplit - halfDistance;
 
-        console.log('[COLUMN_SPLIT] Step 3: Split prev segment of current angle');
-        console.log('  currentPrevSegLengthAfterSplit:', currentPrevSegLengthAfterSplit);
-        console.log('  splitDistanceCurrent:', splitDistanceCurrent);
-
         let prevSplitVertexCurrent = null;
         if (splitDistanceCurrent > SPLIT_EPSILON && currentPrevSegLengthAfterSplit > halfDistance) {
           const splitResultCurrent = splitSegmentAtDistance(
@@ -379,14 +364,7 @@ export function transformContour(contour, internalAngles, options = {}) {
         const nextConnectionsAfterSplit2 = findConnectedSegmentIndices(updated, nextAngleIndexAfterSplit2);
         const nextNextSegForSplit = nextConnectionsAfterSplit2.nextSegIndex !== -1
           ? updated.segments[nextConnectionsAfterSplit2.nextSegIndex]
-          : null;
-
-        console.log('[COLUMN_SPLIT] Step 5: Split next-next segment of next angle');
-        console.log('  nextNextSegForSplit:', nextNextSegForSplit ? 'exists' : 'null');
-        if (nextNextSegForSplit) {
-          const nextNextSegLengthAfterSplit = getSegmentLength(updated, nextNextSegForSplit);
-          console.log('  nextNextSegLengthAfterSplit:', nextNextSegLengthAfterSplit);
-        }
+           : null;
 
         let nextSplitVertexNext = null;
         if (nextNextSegForSplit) {
@@ -424,12 +402,6 @@ export function transformContour(contour, internalAngles, options = {}) {
         const prevCenter = updated.vertices[currentPrevSeg.startIndex];
         const nextCenter = updated.vertices[currentNextSeg.endIndex];
 
-        console.log('[COLUMN_SPLIT] Step 6: Circle intersection setup');
-        console.log('  prevCenter:', prevCenter);
-        console.log('  nextCenter:', nextCenter);
-        console.log('  currentPrevSeg.length:', currentPrevSeg.length);
-        console.log('  currentNextSeg.length:', currentNextSeg.length);
-
         // Step 7: Calculate circle intersection for current angle
         // The segments adjacent to the angle should have length = halfDistance
         // After extension, they should have length = halfDistance + incrementMm
@@ -454,12 +426,6 @@ export function transformContour(contour, internalAngles, options = {}) {
             }
           }
         );
-
-        console.log('[COLUMN_SPLIT] Step 7: Circle intersection result');
-        console.log('  radiusPrev:', radiusPrev, 'radiusNext:', radiusNext);
-        console.log('  intersectionPoint:', intersectionPoint);
-        console.log('  fallbackUsed:', fallbackUsed);
-        console.log('  currentVertexFinal BEFORE:', { x: currentVertexFinal.x, y: currentVertexFinal.y });
 
         if (!intersectionPoint) {
           markSkipped(angle.vertexId);
@@ -490,11 +456,8 @@ export function transformContour(contour, internalAngles, options = {}) {
         }
 
         // Step 8: Move the current angle vertex to the intersection point
-        console.log('[COLUMN_SPLIT] Step 8: Moving first angle vertex to intersection point');
-        console.log('  currentVertexFinal BEFORE move:', { x: currentVertexFinal.x, y: currentVertexFinal.y });
         currentVertexFinal.x = intersectionPoint.x;
         currentVertexFinal.y = intersectionPoint.y;
-        console.log('  currentVertexFinal AFTER move:', { x: currentVertexFinal.x, y: currentVertexFinal.y });
 
         // Step 9: Calculate circle intersection for SECOND angle
         // The second angle also needs to be extended
@@ -518,12 +481,6 @@ export function transformContour(contour, internalAngles, options = {}) {
         const secondPreferredPoint = { x: nextVertexFinal.x, y: nextVertexFinal.y };
         const secondExpectedSign = Math.sign(nextAngle.cross || 0) || -1;
 
-        console.log('[COLUMN_SPLIT] Step 9: Second angle circle intersection setup');
-        console.log('  secondPrevCenter:', secondPrevCenter);
-        console.log('  secondNextCenter:', secondNextCenter);
-        console.log('  nextPrevSegForSecond.length:', nextPrevSegForSecond.length);
-        console.log('  nextNextSegForSecond.length:', nextNextSegForSecond ? nextNextSegForSecond.length : 'N/A');
-
         const { point: secondIntersectionPoint, fallbackUsed: secondFallbackUsed } = findCircleIntersection(
           secondPrevCenter,
           secondRadiusPrev,
@@ -540,22 +497,15 @@ export function transformContour(contour, internalAngles, options = {}) {
           }
         );
 
-        console.log('[COLUMN_SPLIT] Step 9: Second angle circle intersection result');
-        console.log('  secondIntersectionPoint:', secondIntersectionPoint);
-        console.log('  secondFallbackUsed:', secondFallbackUsed);
-
         if (!secondIntersectionPoint) {
-          console.log('[COLUMN_SPLIT] WARNING: Second angle intersection failed, using fallback');
+          markSkipped(nextAngle.vertexId);
         }
 
         // Step 10: Move the second angle vertex to its intersection point
-        console.log('[COLUMN_SPLIT] Step 10: Moving second angle vertex to intersection point');
-        console.log('  nextVertexFinal BEFORE move:', { x: nextVertexFinal.x, y: nextVertexFinal.y });
         if (secondIntersectionPoint) {
           nextVertexFinal.x = secondIntersectionPoint.x;
           nextVertexFinal.y = secondIntersectionPoint.y;
         }
-        console.log('  nextVertexFinal AFTER move:', { x: nextVertexFinal.x, y: nextVertexFinal.y });
 
         // Mark both angles as processed
         markSkipped(angle.vertexId);
@@ -575,10 +525,6 @@ export function transformContour(contour, internalAngles, options = {}) {
         const nextFinalNextSeg = nextConnectionsAfterMove.nextSegIndex !== -1
           ? updated.segments[nextConnectionsAfterMove.nextSegIndex]
           : null;
-
-        console.log('[COLUMN_SPLIT] Final segment lengths after move:');
-        console.log('  First angle - prev:', finalPrevSeg.length.toFixed(2), 'next:', finalNextSeg.length.toFixed(2), '(expected:', radiusPrev.toFixed(2), ')');
-        console.log('  Second angle - prev:', nextFinalPrevSeg.length.toFixed(2), 'next:', nextFinalNextSeg ? nextFinalNextSeg.length.toFixed(2) : 'N/A', '(expected:', secondRadiusPrev.toFixed(2), ')');
 
         transformations.push({
           id: `t-col-split-${currentIndex}`,
@@ -785,15 +731,6 @@ export function transformContour(contour, internalAngles, options = {}) {
   });
 
   recomputeSegments(updated);
-
-  console.log('[TRANSFORM] After all processing - vertex positions:');
-  updated.vertices.forEach((v, i) => {
-    console.log(`  Vertex ${i} (${v.name}):`, { x: v.x, y: v.y });
-  });
-  console.log('[TRANSFORM] After all processing - segment lengths:');
-  updated.segments.forEach((s, i) => {
-    console.log(`  Segment ${i}: length=${s.length.toFixed(2)}, start=${s.startIndex}, end=${s.endIndex}`);
-  });
 
   updated.vertices.forEach((vertex, index) => {
     vertex.name = indexToName(index);

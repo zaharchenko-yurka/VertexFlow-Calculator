@@ -4,8 +4,7 @@ export function createProcessingLog({
   errors,
   durationMs,
   totalContours,
-  totalVertices,
-  debug = null
+  totalVertices
 }) {
   return {
     timestamp: new Date().toISOString(),
@@ -14,18 +13,6 @@ export function createProcessingLog({
     totalVertices,
     results,
     errors,
-    durationMs,
-    debug
+    durationMs
   };
-}
-
-export function logProcessing(log) {
-  if (typeof console === 'undefined') {
-    return;
-  }
-  console.log('[VertexFlow] Processing log', log);
-}
-
-export function exportLogToJson(log) {
-  return JSON.stringify(log, null, 2);
 }
