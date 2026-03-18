@@ -1,0 +1,196 @@
+{
+  "timestamp": "2026-03-17T21:08:00.861Z",
+  "fileName": "test.glc",
+  "totalContours": 3,
+  "totalVertices": 31,
+  "results": [
+    {
+      "contourId": "room-1",
+      "wasModified": true,
+      "internalAnglesFound": 1,
+      "internalAnglesProcessed": 1,
+      "internalAnglesSkipped": 0,
+      "transformations": [
+        {
+          "id": "t-4",
+          "type": "SPLIT_BOTH_SEGMENTS",
+          "vertexIndex": 4,
+          "vertexName": "",
+          "angleDegrees": 270,
+          "prevSegmentIndex": 3,
+          "nextSegmentIndex": 4,
+          "prevSegmentLength": 1000,
+          "nextSegmentLength": 1000,
+          "incrementMm": 20,
+          "incrementPercent": null,
+          "newVertex": {
+            "id": "split-3-1773781680848",
+            "name": "",
+            "x": 7307.912878853643,
+            "y": 5342,
+            "isAnglePoint": false,
+            "originalIndex": 3
+          },
+          "prevSplitVertex": {
+            "id": "split-2-1773781680847",
+            "name": "",
+            "x": 7417,
+            "y": 5392,
+            "isAnglePoint": false,
+            "originalIndex": 2
+          },
+          "nextSplitVertex": {
+            "id": "split-3-1773781680848",
+            "name": "",
+            "x": 7307.912878853643,
+            "y": 5342,
+            "isAnglePoint": false,
+            "originalIndex": 3
+          },
+          "fallbackUsed": false
+        }
+      ],
+      "stretchParamPer": 10,
+      "stretchParamPer2": 10
+    },
+    {
+      "contourId": "room-2",
+      "wasModified": true,
+      "internalAnglesFound": 4,
+      "internalAnglesProcessed": 1,
+      "internalAnglesSkipped": 3,
+      "transformations": [
+        {
+          "id": "t-skip-col-3",
+          "type": "SKIPPED_COLUMN",
+          "vertexIndex": 3,
+          "vertexName": "K",
+          "angleDegrees": 270.11043027265976,
+          "prevSegmentIndex": 2,
+          "nextSegmentIndex": 3,
+          "prevSegmentLength": 923.9300823114262,
+          "nextSegmentLength": 102.15028193793837,
+          "fallbackUsed": false,
+          "reason": "COLUMN_DISTANCE_THRESHOLD"
+        },
+        {
+          "id": "t-skip-col-4",
+          "type": "SKIPPED_COLUMN",
+          "vertexIndex": 4,
+          "vertexName": "J",
+          "angleDegrees": 269.86538461301024,
+          "prevSegmentIndex": 3,
+          "nextSegmentIndex": 4,
+          "prevSegmentLength": 102.15028193793837,
+          "nextSegmentLength": 923.4700000000003,
+          "fallbackUsed": false,
+          "reason": "COLUMN_DISTANCE_THRESHOLD"
+        },
+        {
+          "id": "t-skip-short-8",
+          "type": "SKIPPED_SHORT_SEGMENT",
+          "vertexIndex": 8,
+          "vertexName": "F",
+          "angleDegrees": 270.56322373049375,
+          "prevSegmentIndex": 7,
+          "nextSegmentIndex": 8,
+          "prevSegmentLength": 40.69196603753581,
+          "nextSegmentLength": 1021.1500000000001,
+          "fallbackUsed": false,
+          "reason": "MIN_SKIP_LENGTH"
+        },
+        {
+          "id": "t-12",
+          "type": "SPLIT_BOTH_SEGMENTS",
+          "vertexIndex": 12,
+          "vertexName": "",
+          "angleDegrees": 270,
+          "prevSegmentIndex": 11,
+          "nextSegmentIndex": 12,
+          "prevSegmentLength": 1023.9999999999995,
+          "nextSegmentLength": 2394.51,
+          "incrementMm": 20,
+          "incrementPercent": null,
+          "newVertex": {
+            "id": "split-11-1773781680851",
+            "name": "",
+            "x": 4208.1900000000005,
+            "y": 8147.162878853643,
+            "isAnglePoint": false,
+            "originalIndex": 11
+          },
+          "prevSplitVertex": {
+            "id": "split-10-1773781680851",
+            "name": "",
+            "x": 4158.1900000000005,
+            "y": 8256.25,
+            "isAnglePoint": false,
+            "originalIndex": 10
+          },
+          "nextSplitVertex": {
+            "id": "split-11-1773781680851",
+            "name": "",
+            "x": 4208.1900000000005,
+            "y": 8147.162878853643,
+            "isAnglePoint": false,
+            "originalIndex": 11
+          },
+          "fallbackUsed": false
+        }
+      ],
+      "stretchParamPer": 10,
+      "stretchParamPer2": 10
+    },
+    {
+      "contourId": "room-3",
+      "wasModified": true,
+      "internalAnglesFound": 1,
+      "internalAnglesProcessed": 1,
+      "internalAnglesSkipped": 0,
+      "transformations": [
+        {
+          "id": "t-1",
+          "type": "SPLIT_BOTH_SEGMENTS",
+          "vertexIndex": 1,
+          "vertexName": "A",
+          "angleDegrees": 203.9396208570042,
+          "prevSegmentIndex": 0,
+          "nextSegmentIndex": 1,
+          "prevSegmentLength": 1394.0775031898336,
+          "nextSegmentLength": 2075.9700000000003,
+          "incrementMm": 20,
+          "incrementPercent": null,
+          "newVertex": {
+            "id": "v-1",
+            "name": "A",
+            "x": 9997.699520132894,
+            "y": 2166.2164248930635,
+            "isAnglePoint": true,
+            "originalIndex": 1
+          },
+          "prevSplitVertex": {
+            "id": "split-6-1773781680854",
+            "name": "",
+            "x": 9882.047370964357,
+            "y": 2134.207357541785,
+            "isAnglePoint": false,
+            "originalIndex": 6
+          },
+          "nextSplitVertex": {
+            "id": "split-7-1773781680854",
+            "name": "",
+            "x": 9897.955915759469,
+            "y": 2232.9338393108724,
+            "isAnglePoint": false,
+            "originalIndex": 7
+          },
+          "fallbackUsed": false
+        }
+      ],
+      "stretchParamPer": 10,
+      "stretchParamPer2": 10
+    }
+  ],
+  "errors": [],
+  "durationMs": 16
+}
