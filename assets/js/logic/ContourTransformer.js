@@ -187,7 +187,10 @@ export function transformContour(contour, internalAngles, options = {}) {
   };
 
   angleTargets.forEach((angle, idx) => {
+    console.log('[TRANSFORM] Processing angle idx:', idx, 'vertexId:', angle.vertexId, 'skipped:', skippedVertexIds.has(angle.vertexId));
+    
     if (skippedVertexIds.has(angle.vertexId)) {
+      console.log('[TRANSFORM] Skipping already processed angle');
       return;
     }
 
@@ -261,6 +264,362 @@ export function transformContour(contour, internalAngles, options = {}) {
           fallbackUsed: false,
           reason: 'COLUMN_DISTANCE_THRESHOLD'
         });
+        return;
+      }
+    }
+
+    // Handle column splitting when skipColumns is FALSE and distance is small
+    if (!skipColumns && idx + 1 < angleTargets.length) {
+      const nextAngle = angleTargets[idx + 1];
+      const nextAngleIndexOrig = updated.vertices.findIndex((vertex) => vertex.id === nextAngle.vertexId);
+      const nextVertex = nextAngleIndexOrig !== -1 ? updated.vertices[nextAngleIndexOrig] : null;
+
+      const distBetweenAngles = nextVertex ? distance(currentVertex, nextVertex) : Infinity;
+
+      if (
+        nextVertex
+        && !skippedVertexIds.has(nextAngle.vertexId)
+        && nextAngleIndexOrig !== currentIndex
+        && distBetweenAngles < COLUMN_DISTANCE_THRESHOLD
+        && distBetweenAngles < (2 * SPLIT_THRESHOLD_SHORT)
+      ) {
+        console.log('[COLUMN_SPLIT] Starting column split:', {
+          currentIndex,
+          nextAngleIndexOrig,
+          distBetweenAngles,
+          halfDistance: distBetweenAngles / 2
+        });
+
+        // Split the segment between the two angles into two equal halves
+        // Split the adjacent segments so new segments near angles = half the distance
+        const halfDistance = distBetweenAngles / 2;
+        const incrementMm = (halfDistance * SHORT_INCREMENT_PERCENT) / 100;
+        const incrementPercent = SHORT_INCREMENT_PERCENT;
+
+        // Store original segment indices before any modifications
+        const originalPrevSegIndex = prevSegIndex;
+        const originalConnectingSegIndex = nextSegIndex;
+        const currentPrevSegLength = getSegmentLength(updated, updated.segments[originalPrevSegIndex]);
+
+        // Get next angle's connections before modifications
+        const nextAngleConnectionsOrig = findConnectedSegmentIndices(updated, nextAngleIndexOrig);
+        const nextNextSegLength = nextAngleConnectionsOrig.nextSegIndex !== -1
+          ? getSegmentLength(updated, updated.segments[nextAngleConnectionsOrig.nextSegIndex])
+          : 0;
+
+        // Step 1: Split the segment connecting the two angles at half distance
+        console.log('[COLUMN_SPLIT] Step 1: Split connecting segment at halfDistance:', halfDistance);
+        const splitResult = splitSegmentAtDistance(updated, originalConnectingSegIndex, halfDistance);
+
+        if (!splitResult) {
+          // Cannot split, skip both angles
+          markSkipped(angle.vertexId);
+          markSkipped(nextAngle.vertexId);
+          const nextConnectionsFallback = findConnectedSegmentIndices(updated, nextAngleIndexOrig);
+          transformations.push({
+            id: `t-skip-col-split-fail-${currentIndex}`,
+            type: 'SKIPPED_COLUMN_SPLIT_FAILED',
+            vertexIndex: currentIndex,
+            vertexName: currentVertex.name,
+            angleDegrees: angle.angle,
+            prevSegmentIndex: prevSegIndex,
+            nextSegmentIndex: nextSegIndex,
+            fallbackUsed: true,
+            reason: 'COLUMN_SPLIT_FAILED'
+          });
+          transformations.push({
+            id: `t-skip-col-split-fail-${nextAngle.vertexId}`,
+            type: 'SKIPPED_COLUMN_SPLIT_FAILED',
+            vertexIndex: nextAngleIndexOrig,
+            vertexName: nextVertex.name,
+            angleDegrees: nextAngle.angle,
+            prevSegmentIndex: nextConnectionsFallback.prevSegIndex,
+            nextSegmentIndex: nextConnectionsFallback.nextSegIndex,
+            fallbackUsed: true,
+            reason: 'COLUMN_SPLIT_FAILED'
+          });
+          return;
+        }
+
+        // Step 2: Find updated indices after the split
+        const currentIndexAfterSplit1 = updated.vertices.findIndex((vertex) => vertex.id === angle.vertexId);
+        const nextAngleIndexAfterSplit1 = updated.vertices.findIndex((vertex) => vertex.id === nextAngle.vertexId);
+
+        // Step 3: Split previous segment of current angle
+        // We want the segment NEAR the angle to be halfDistance
+        // So we split at: segmentLength - halfDistance (from start of segment)
+        const currentConnectionsAfterSplit1 = findConnectedSegmentIndices(updated, currentIndexAfterSplit1);
+        const currentPrevSegAfterSplit1 = updated.segments[currentConnectionsAfterSplit1.prevSegIndex];
+        const currentPrevSegLengthAfterSplit = getSegmentLength(updated, currentPrevSegAfterSplit1);
+        const splitDistanceCurrent = currentPrevSegLengthAfterSplit - halfDistance;
+
+        console.log('[COLUMN_SPLIT] Step 3: Split prev segment of current angle');
+        console.log('  currentPrevSegLengthAfterSplit:', currentPrevSegLengthAfterSplit);
+        console.log('  splitDistanceCurrent:', splitDistanceCurrent);
+
+        let prevSplitVertexCurrent = null;
+        if (splitDistanceCurrent > SPLIT_EPSILON && currentPrevSegLengthAfterSplit > halfDistance) {
+          const splitResultCurrent = splitSegmentAtDistance(
+            updated,
+            currentConnectionsAfterSplit1.prevSegIndex,
+            splitDistanceCurrent
+          );
+          if (splitResultCurrent) {
+            prevSplitVertexCurrent = splitResultCurrent.newVertex;
+          }
+        }
+
+        // Step 4: Find updated indices again after second split
+        const currentIndexAfterSplit2 = updated.vertices.findIndex((vertex) => vertex.id === angle.vertexId);
+        const nextAngleIndexAfterSplit2 = updated.vertices.findIndex((vertex) => vertex.id === nextAngle.vertexId);
+
+        // Step 5: Split next-next segment of next angle
+        // We want the segment NEAR the angle to be halfDistance
+        // So we split at: halfDistance (from start of segment, which is the angle vertex)
+        const nextConnectionsAfterSplit2 = findConnectedSegmentIndices(updated, nextAngleIndexAfterSplit2);
+        const nextNextSegForSplit = nextConnectionsAfterSplit2.nextSegIndex !== -1
+          ? updated.segments[nextConnectionsAfterSplit2.nextSegIndex]
+          : null;
+
+        console.log('[COLUMN_SPLIT] Step 5: Split next-next segment of next angle');
+        console.log('  nextNextSegForSplit:', nextNextSegForSplit ? 'exists' : 'null');
+        if (nextNextSegForSplit) {
+          const nextNextSegLengthAfterSplit = getSegmentLength(updated, nextNextSegForSplit);
+          console.log('  nextNextSegLengthAfterSplit:', nextNextSegLengthAfterSplit);
+        }
+
+        let nextSplitVertexNext = null;
+        if (nextNextSegForSplit) {
+          const nextNextSegLengthAfterSplit = getSegmentLength(updated, nextNextSegForSplit);
+          const splitDistanceNext = halfDistance;
+
+          if (splitDistanceNext > SPLIT_EPSILON && nextNextSegLengthAfterSplit > halfDistance) {
+            const splitResultNext = splitSegmentAtDistance(
+              updated,
+              nextConnectionsAfterSplit2.nextSegIndex,
+              splitDistanceNext
+            );
+            if (splitResultNext) {
+              nextSplitVertexNext = splitResultNext.newVertex;
+            }
+          }
+        }
+
+        // Step 6: Find final indices and segments for circle intersection
+        const currentIndexFinal = updated.vertices.findIndex((vertex) => vertex.id === angle.vertexId);
+        const nextAngleIndexFinal = updated.vertices.findIndex((vertex) => vertex.id === nextAngle.vertexId);
+        const currentVertexFinal = updated.vertices[currentIndexFinal];
+        const nextVertexFinal = updated.vertices[nextAngleIndexFinal];
+
+        const currentConnectionsFinal = findConnectedSegmentIndices(updated, currentIndexFinal);
+        const nextConnectionsFinal = findConnectedSegmentIndices(updated, nextAngleIndexFinal);
+
+        // Get the segments connected to current angle
+        const currentPrevSeg = updated.segments[currentConnectionsFinal.prevSegIndex];
+        const currentNextSeg = updated.segments[currentConnectionsFinal.nextSegIndex];
+
+        // Centers are the far vertices from the current angle:
+        // - prevSeg ends at the angle, so startIndex is the far vertex
+        // - nextSeg starts at the angle, so endIndex is the far vertex
+        const prevCenter = updated.vertices[currentPrevSeg.startIndex];
+        const nextCenter = updated.vertices[currentNextSeg.endIndex];
+
+        console.log('[COLUMN_SPLIT] Step 6: Circle intersection setup');
+        console.log('  prevCenter:', prevCenter);
+        console.log('  nextCenter:', nextCenter);
+        console.log('  currentPrevSeg.length:', currentPrevSeg.length);
+        console.log('  currentNextSeg.length:', currentNextSeg.length);
+
+        // Step 7: Calculate circle intersection for current angle
+        // The segments adjacent to the angle should have length = halfDistance
+        // After extension, they should have length = halfDistance + incrementMm
+        const radiusPrev = halfDistance + incrementMm;
+        const radiusNext = halfDistance + incrementMm;
+
+        const preferredPoint = { x: currentVertexFinal.x, y: currentVertexFinal.y };
+        const expectedSign = Math.sign(angle.cross || 0) || -1;
+
+        const { point: intersectionPoint, fallbackUsed } = findCircleIntersection(
+          prevCenter,
+          radiusPrev,
+          nextCenter,
+          radiusNext,
+          {
+            preferredPoint,
+            expectedCrossSign: expectedSign,
+            crossCheck: (candidate) => {
+              const cross = (prevCenter.x - candidate.x) * (nextCenter.y - candidate.y)
+                - (prevCenter.y - candidate.y) * (nextCenter.x - candidate.x);
+              return cross;
+            }
+          }
+        );
+
+        console.log('[COLUMN_SPLIT] Step 7: Circle intersection result');
+        console.log('  radiusPrev:', radiusPrev, 'radiusNext:', radiusNext);
+        console.log('  intersectionPoint:', intersectionPoint);
+        console.log('  fallbackUsed:', fallbackUsed);
+        console.log('  currentVertexFinal BEFORE:', { x: currentVertexFinal.x, y: currentVertexFinal.y });
+
+        if (!intersectionPoint) {
+          markSkipped(angle.vertexId);
+          markSkipped(nextAngle.vertexId);
+          transformations.push({
+            id: `t-col-split-intersection-fail-${currentIndex}`,
+            type: 'COLUMN_SPLIT_INTERSECTION_FAILED',
+            vertexIndex: currentIndex,
+            vertexName: currentVertex.name,
+            angleDegrees: angle.angle,
+            prevSegmentIndex: currentConnectionsFinal.prevSegIndex,
+            nextSegmentIndex: currentConnectionsFinal.nextSegIndex,
+            fallbackUsed: true,
+            reason: 'CIRCLE_INTERSECTION_FAILED'
+          });
+          transformations.push({
+            id: `t-col-split-intersection-fail-${nextAngle.vertexId}`,
+            type: 'COLUMN_SPLIT_INTERSECTION_FAILED',
+            vertexIndex: nextAngleIndexFinal,
+            vertexName: nextVertex.name,
+            angleDegrees: nextAngle.angle,
+            prevSegmentIndex: nextConnectionsFinal.prevSegIndex,
+            nextSegmentIndex: nextConnectionsFinal.nextSegIndex,
+            fallbackUsed: true,
+            reason: 'CIRCLE_INTERSECTION_FAILED'
+          });
+          return;
+        }
+
+        // Step 8: Move the current angle vertex to the intersection point
+        console.log('[COLUMN_SPLIT] Step 8: Moving first angle vertex to intersection point');
+        console.log('  currentVertexFinal BEFORE move:', { x: currentVertexFinal.x, y: currentVertexFinal.y });
+        currentVertexFinal.x = intersectionPoint.x;
+        currentVertexFinal.y = intersectionPoint.y;
+        console.log('  currentVertexFinal AFTER move:', { x: currentVertexFinal.x, y: currentVertexFinal.y });
+
+        // Step 9: Calculate circle intersection for SECOND angle
+        // The second angle also needs to be extended
+        const nextConnectionsForSecond = findConnectedSegmentIndices(updated, nextAngleIndexFinal);
+        const nextPrevSegForSecond = updated.segments[nextConnectionsForSecond.prevSegIndex];
+        const nextNextSegForSecond = nextConnectionsForSecond.nextSegIndex !== -1
+          ? updated.segments[nextConnectionsForSecond.nextSegIndex]
+          : null;
+
+        // Centers for second angle:
+        // - prevSeg ends at second angle, so startIndex is the far vertex (mid point)
+        // - nextSeg starts at second angle, so endIndex is the far vertex
+        const secondPrevCenter = updated.vertices[nextPrevSegForSecond.startIndex];
+        const secondNextCenter = nextNextSegForSecond
+          ? updated.vertices[nextNextSegForSecond.endIndex]
+          : nextVertexFinal;
+
+        const secondRadiusPrev = halfDistance + incrementMm;
+        const secondRadiusNext = halfDistance + incrementMm;
+
+        const secondPreferredPoint = { x: nextVertexFinal.x, y: nextVertexFinal.y };
+        const secondExpectedSign = Math.sign(nextAngle.cross || 0) || -1;
+
+        console.log('[COLUMN_SPLIT] Step 9: Second angle circle intersection setup');
+        console.log('  secondPrevCenter:', secondPrevCenter);
+        console.log('  secondNextCenter:', secondNextCenter);
+        console.log('  nextPrevSegForSecond.length:', nextPrevSegForSecond.length);
+        console.log('  nextNextSegForSecond.length:', nextNextSegForSecond ? nextNextSegForSecond.length : 'N/A');
+
+        const { point: secondIntersectionPoint, fallbackUsed: secondFallbackUsed } = findCircleIntersection(
+          secondPrevCenter,
+          secondRadiusPrev,
+          secondNextCenter,
+          secondRadiusNext,
+          {
+            preferredPoint: secondPreferredPoint,
+            expectedCrossSign: secondExpectedSign,
+            crossCheck: (candidate) => {
+              const cross = (secondPrevCenter.x - candidate.x) * (secondNextCenter.y - candidate.y)
+                - (secondPrevCenter.y - candidate.y) * (secondNextCenter.x - candidate.x);
+              return cross;
+            }
+          }
+        );
+
+        console.log('[COLUMN_SPLIT] Step 9: Second angle circle intersection result');
+        console.log('  secondIntersectionPoint:', secondIntersectionPoint);
+        console.log('  secondFallbackUsed:', secondFallbackUsed);
+
+        if (!secondIntersectionPoint) {
+          console.log('[COLUMN_SPLIT] WARNING: Second angle intersection failed, using fallback');
+        }
+
+        // Step 10: Move the second angle vertex to its intersection point
+        console.log('[COLUMN_SPLIT] Step 10: Moving second angle vertex to intersection point');
+        console.log('  nextVertexFinal BEFORE move:', { x: nextVertexFinal.x, y: nextVertexFinal.y });
+        if (secondIntersectionPoint) {
+          nextVertexFinal.x = secondIntersectionPoint.x;
+          nextVertexFinal.y = secondIntersectionPoint.y;
+        }
+        console.log('  nextVertexFinal AFTER move:', { x: nextVertexFinal.x, y: nextVertexFinal.y });
+
+        // Mark both angles as processed
+        markSkipped(angle.vertexId);
+        markSkipped(nextAngle.vertexId);
+
+        // Recompute segment lengths after vertex moves
+        recomputeSegments(updated);
+
+        // Get final segment lengths for logging (first angle)
+        const currentConnectionsAfterMove = findConnectedSegmentIndices(updated, currentIndexFinal);
+        const finalPrevSeg = updated.segments[currentConnectionsAfterMove.prevSegIndex];
+        const finalNextSeg = updated.segments[currentConnectionsAfterMove.nextSegIndex];
+
+        // Get final segment lengths for logging (second angle)
+        const nextConnectionsAfterMove = findConnectedSegmentIndices(updated, nextAngleIndexFinal);
+        const nextFinalPrevSeg = updated.segments[nextConnectionsAfterMove.prevSegIndex];
+        const nextFinalNextSeg = nextConnectionsAfterMove.nextSegIndex !== -1
+          ? updated.segments[nextConnectionsAfterMove.nextSegIndex]
+          : null;
+
+        console.log('[COLUMN_SPLIT] Final segment lengths after move:');
+        console.log('  First angle - prev:', finalPrevSeg.length.toFixed(2), 'next:', finalNextSeg.length.toFixed(2), '(expected:', radiusPrev.toFixed(2), ')');
+        console.log('  Second angle - prev:', nextFinalPrevSeg.length.toFixed(2), 'next:', nextFinalNextSeg ? nextFinalNextSeg.length.toFixed(2) : 'N/A', '(expected:', secondRadiusPrev.toFixed(2), ')');
+
+        transformations.push({
+          id: `t-col-split-${currentIndex}`,
+          type: 'COLUMN_SPLIT',
+          vertexIndex: currentIndexFinal,
+          vertexName: currentVertexFinal.name,
+          angleDegrees: angle.angle,
+          prevSegmentIndex: currentConnectionsFinal.prevSegIndex,
+          nextSegmentIndex: currentConnectionsFinal.nextSegIndex,
+          prevSegmentLength: currentPrevSegLength,
+          nextSegmentLength: distBetweenAngles,
+          halfDistance,
+          incrementMm,
+          incrementPercent,
+          newVertex: { ...currentVertexFinal },
+          prevSplitVertex: prevSplitVertexCurrent ? { ...prevSplitVertexCurrent } : null,
+          nextSplitVertex: nextSplitVertexNext ? { ...nextSplitVertexNext } : null,
+          fallbackUsed,
+          reason: 'COLUMN_SPLIT_SHORT_DISTANCE',
+          pairedVertexIndex: nextAngleIndexFinal
+        });
+        transformations.push({
+          id: `t-col-split-${nextAngle.vertexId}`,
+          type: 'COLUMN_SPLIT',
+          vertexIndex: nextAngleIndexFinal,
+          vertexName: nextVertexFinal.name,
+          angleDegrees: nextAngle.angle,
+          prevSegmentIndex: nextConnectionsFinal.prevSegIndex,
+          nextSegmentIndex: nextConnectionsFinal.nextSegIndex,
+          prevSegmentLength: distBetweenAngles,
+          nextSegmentLength: nextNextSegLength,
+          halfDistance,
+          incrementMm,
+          incrementPercent,
+          newVertex: { ...nextVertexFinal },
+          fallbackUsed: secondFallbackUsed,
+          reason: 'COLUMN_SPLIT_SHORT_DISTANCE',
+          pairedVertexIndex: currentIndexFinal
+        });
+
+        // Skip further processing of this angle (already handled)
         return;
       }
     }
@@ -426,6 +785,15 @@ export function transformContour(contour, internalAngles, options = {}) {
   });
 
   recomputeSegments(updated);
+
+  console.log('[TRANSFORM] After all processing - vertex positions:');
+  updated.vertices.forEach((v, i) => {
+    console.log(`  Vertex ${i} (${v.name}):`, { x: v.x, y: v.y });
+  });
+  console.log('[TRANSFORM] After all processing - segment lengths:');
+  updated.segments.forEach((s, i) => {
+    console.log(`  Segment ${i}: length=${s.length.toFixed(2)}, start=${s.startIndex}, end=${s.endIndex}`);
+  });
 
   updated.vertices.forEach((vertex, index) => {
     vertex.name = indexToName(index);
