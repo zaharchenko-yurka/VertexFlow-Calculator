@@ -1,5 +1,5 @@
 export const COLUMN_DISTANCE_THRESHOLD = 250; // mm
-export const MIN_SKIP_LENGTH = 45; // mm
+export const MIN_SKIP_LENGTH = 40; // mm
 export const SPLIT_THRESHOLD_SHORT = 110; // mm
 export const NEAR_ANGLE_SEGMENT = 100; // mm
 export const SHORT_INCREMENT_PERCENT = 10; // percent

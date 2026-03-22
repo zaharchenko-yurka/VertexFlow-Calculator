@@ -186,6 +186,12 @@ export function transformContour(contour, internalAngles, options = {}) {
     }
   };
 
+  const markHandled = (vertexId) => {
+    if (!skippedVertexIds.has(vertexId)) {
+      skippedVertexIds.add(vertexId);
+    }
+  };
+
   angleTargets.forEach((angle, idx) => {
     if (skippedVertexIds.has(angle.vertexId)) {
       return;
@@ -219,12 +225,17 @@ export function transformContour(contour, internalAngles, options = {}) {
       const nextAngle = angleTargets[idx + 1];
       const nextAngleIndex = updated.vertices.findIndex((vertex) => vertex.id === nextAngle.vertexId);
       const nextVertex = nextAngleIndex !== -1 ? updated.vertices[nextAngleIndex] : null;
+      const connectingSegIndex = nextAngleIndex !== -1 ? nextSegIndex : -1;
+      const connectingSeg = connectingSegIndex !== -1 ? updated.segments[connectingSegIndex] : null;
+      const isAdjacentAngle = Boolean(connectingSeg && connectingSeg.endIndex === nextAngleIndex);
+      const distBetweenAngles = isAdjacentAngle ? getSegmentLength(updated, connectingSeg) : Infinity;
 
       if (
         nextVertex
+        && isAdjacentAngle
         && !skippedVertexIds.has(nextAngle.vertexId)
         && nextAngleIndex !== currentIndex
-        && distance(currentVertex, nextVertex) < COLUMN_DISTANCE_THRESHOLD
+        && distBetweenAngles < COLUMN_DISTANCE_THRESHOLD
       ) {
         const currentPrevSeg = updated.segments[prevSegIndex];
         const currentNextSeg = updated.segments[nextSegIndex];
@@ -270,11 +281,61 @@ export function transformContour(contour, internalAngles, options = {}) {
       const nextAngle = angleTargets[idx + 1];
       const nextAngleIndexOrig = updated.vertices.findIndex((vertex) => vertex.id === nextAngle.vertexId);
       const nextVertex = nextAngleIndexOrig !== -1 ? updated.vertices[nextAngleIndexOrig] : null;
-
-      const distBetweenAngles = nextVertex ? distance(currentVertex, nextVertex) : Infinity;
+      const connectingSegIndex = nextAngleIndexOrig !== -1 ? nextSegIndex : -1;
+      const connectingSeg = connectingSegIndex !== -1 ? updated.segments[connectingSegIndex] : null;
+      const isAdjacentAngle = Boolean(connectingSeg && connectingSeg.endIndex === nextAngleIndexOrig);
+      const distBetweenAngles = isAdjacentAngle ? getSegmentLength(updated, connectingSeg) : Infinity;
+      const narrowPilasterThreshold = 2 * MIN_SKIP_LENGTH;
 
       if (
         nextVertex
+        && isAdjacentAngle
+        && !skippedVertexIds.has(nextAngle.vertexId)
+        && nextAngleIndexOrig !== currentIndex
+        && distBetweenAngles <= narrowPilasterThreshold
+      ) {
+        const currentPrevSeg = updated.segments[prevSegIndex];
+        const currentNextSeg = updated.segments[nextSegIndex];
+        const nextConnections = findConnectedSegmentIndices(updated, nextAngleIndexOrig);
+        const nextPrevSeg = nextConnections.prevSegIndex === -1 ? null : updated.segments[nextConnections.prevSegIndex];
+        const nextNextSeg = nextConnections.nextSegIndex === -1 ? null : updated.segments[nextConnections.nextSegIndex];
+
+        markSkipped(angle.vertexId);
+        markSkipped(nextAngle.vertexId);
+
+        transformations.push({
+          id: `t-skip-narrow-pilaster-${currentIndex}`,
+          type: 'SKIPPED_NARROW_PILASTER',
+          vertexIndex: currentIndex,
+          vertexName: currentVertex.name,
+          angleDegrees: angle.angle,
+          prevSegmentIndex: prevSegIndex,
+          nextSegmentIndex: nextSegIndex,
+          prevSegmentLength: currentPrevSeg ? getSegmentLength(updated, currentPrevSeg) : 0,
+          nextSegmentLength: currentNextSeg ? getSegmentLength(updated, currentNextSeg) : 0,
+          fallbackUsed: false,
+          reason: 'NARROW_PILASTER_THRESHOLD'
+        });
+        transformations.push({
+          id: `t-skip-narrow-pilaster-${nextAngle.vertexId}`,
+          type: 'SKIPPED_NARROW_PILASTER',
+          vertexIndex: nextAngleIndexOrig,
+          vertexName: nextVertex.name,
+          angleDegrees: nextAngle.angle,
+          prevSegmentIndex: nextConnections.prevSegIndex,
+          nextSegmentIndex: nextConnections.nextSegIndex,
+          prevSegmentLength: nextPrevSeg ? getSegmentLength(updated, nextPrevSeg) : 0,
+          nextSegmentLength: nextNextSeg ? getSegmentLength(updated, nextNextSeg) : 0,
+          fallbackUsed: false,
+          reason: 'NARROW_PILASTER_THRESHOLD'
+        });
+        return;
+      }
+
+      // Split narrow pilasters only when the angles are adjacent on the contour.
+      if (
+        nextVertex
+        && isAdjacentAngle
         && !skippedVertexIds.has(nextAngle.vertexId)
         && nextAngleIndexOrig !== currentIndex
         && distBetweenAngles < COLUMN_DISTANCE_THRESHOLD
@@ -288,7 +349,7 @@ export function transformContour(contour, internalAngles, options = {}) {
 
         // Store original segment indices before any modifications
         const originalPrevSegIndex = prevSegIndex;
-        const originalConnectingSegIndex = nextSegIndex;
+        const originalConnectingSegIndex = connectingSegIndex;
         const currentPrevSegLength = getSegmentLength(updated, updated.segments[originalPrevSegIndex]);
 
         // Get next angle's connections before modifications
@@ -507,9 +568,15 @@ export function transformContour(contour, internalAngles, options = {}) {
           nextVertexFinal.y = secondIntersectionPoint.y;
         }
 
-        // Mark both angles as processed
-        markSkipped(angle.vertexId);
-        markSkipped(nextAngle.vertexId);
+        // Mark both angles as handled so they are not processed again.
+        // Count them as processed if intersections succeeded.
+        markHandled(angle.vertexId);
+        if (secondIntersectionPoint) {
+          markHandled(nextAngle.vertexId);
+          processedCount += 2;
+        } else {
+          processedCount += 1;
+        }
 
         // Recompute segment lengths after vertex moves
         recomputeSegments(updated);

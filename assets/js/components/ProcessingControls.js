@@ -10,7 +10,7 @@ export function createProcessingControls({ onProcess }) {
 
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
-  checkbox.checked = true;
+  checkbox.checked = false;
 
   const checkboxText = document.createElement('span');
   checkboxText.textContent = 'Не обробляти колони і простінки';

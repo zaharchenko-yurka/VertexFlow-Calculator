@@ -43,7 +43,7 @@
 /**
  * @typedef {Object} Transformation
  * @property {string} id
- * @property {'SKIPPED_COLUMN'|'SKIPPED_SHORT_SEGMENT'|'SPLIT_SHORT_SEGMENT'|'SPLIT_BOTH_SEGMENTS'} type
+ * @property {'SKIPPED_COLUMN'|'SKIPPED_NARROW_PILASTER'|'SKIPPED_SHORT_SEGMENT'|'SPLIT_SHORT_SEGMENT'|'SPLIT_BOTH_SEGMENTS'} type
  * @property {number} vertexIndex
  * @property {string} vertexName
  * @property {number} angleDegrees

@@ -1,0 +1,355 @@
+OBJ_ZAKNO_**_
+OBJ_ADDR_**_
+OBJ_ZAMER_**_
+OBJ_DOC1C_**_
+OBJ_1C_exp_file_**_
+OBJ_ZakName_**_
+OBJ_ZakTelef_**_
+GgoCount 1
+GgoAllSqw 8.669
+ORG_NAME_**_
+ORG_ADDR_**_
+ORG_TELEF_**_
+DilerID_**_0
+CODE_1C_**_
+ManagerID_**_1
+MVDate2_**_0
+MailDate_**_0
+FtpDate_**_0
+MVTextW200_**_
+ROOMBEGIN
+RoomName кімн. №1
+UID1 99B95FFD-207B-4C15-BA23-267712E2218C
+RoomHeight 0
+Date1 -1
+Date2 -1
+RoomWWidth 5
+NumOrCharGgo False
+WITHOUT_POLOTNO False
+WITHOUT_HARPOON False
+POINTS
+AnglePoint 1332.34, -1288.64
+AnglePoint -1707.41, -1288.64
+AnglePoint -1707.41, -382.11
+AnglePoint -977.88, -382.46
+AnglePoint -977.88, -182.46
+AnglePoint -1685.57, -182.46
+AnglePoint -1685.57, 818.39
+AnglePoint -978.08, 819.31
+AnglePoint -978.08, 907.31
+AnglePoint -1675.37, 907.31
+AnglePoint -1675.37, 1807.54
+AnglePoint -577.4, 1808.97
+AnglePoint -577.4, 1843.97
+AnglePoint 494.55, 1843.97
+AnglePoint 494.55, 1240.34
+AnglePoint 1342.75, 1240.34
+AnglePoint 1342.75, 348.07
+AnglePoint 499.76, 348.07
+AnglePoint 499.76, 288.07
+AnglePoint 1332.34, 288.07
+POINTSEND
+OTRARCS
+WallWid3 0, 0
+WallWid3 1, 0
+WallWid3 2, 0
+WallWid3 3, 0
+WallWid3 4, 0
+WallWid3 5, 0
+WallWid3 6, 0
+WallWid3 7, 0
+WallWid3 8, 0
+WallWid3 9, 0
+WallWid3 10, 0
+WallWid3 11, 0
+WallWid3 12, 0
+WallWid3 13, 0
+WallWid3 14, 0
+WallWid3 15, 0
+WallWid3 16, 0
+WallWid3 17, 0
+WallWid3 18, 0
+WallWid3 19, 0
+OTRARCSEND
+BLUEPOINTS
+BLUEPOINTSEND
+otrlist_
+NPLine
+PoBeg 1332.34, -1288.64
+PoEnd -1707.41, -1288.64
+Wid1 100
+PoNumber2 1
+IdntBeg K
+IdntEnd J
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -1707.41, -1288.64
+PoEnd -1707.41, -382.11
+Wid1 100
+PoNumber1 1
+PoNumber2 2
+IdntBeg J
+IdntEnd I
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -1707.41, -382.11
+PoEnd -977.88, -382.46
+Wid1 100
+PoNumber1 2
+PoNumber2 3
+IdntBeg I
+IdntEnd H
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -977.88, -382.46
+PoEnd -977.88, -182.46
+Wid1 100
+PoNumber1 3
+PoNumber2 4
+JValue 200
+IdntBeg H
+IdntEnd G
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -977.88, -182.46
+PoEnd -1685.57, -182.46
+Wid1 100
+PoNumber1 4
+PoNumber2 5
+IdntBeg G
+IdntEnd F
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -1685.57, -182.46
+PoEnd -1685.57, 818.39
+Wid1 100
+PoNumber1 5
+PoNumber2 6
+IdntBeg F
+IdntEnd E
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -1685.57, 818.39
+PoEnd -978.08, 819.31
+Wid1 100
+PoNumber1 6
+PoNumber2 7
+IdntBeg E
+IdntEnd D
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -978.08, 819.31
+PoEnd -978.08, 907.31
+Wid1 100
+PoNumber1 7
+PoNumber2 8
+JValue 88
+IdntBeg D
+IdntEnd C
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -978.08, 907.31
+PoEnd -1675.37, 907.31
+Wid1 100
+PoNumber1 8
+PoNumber2 9
+IdntBeg C
+IdntEnd B
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -1675.37, 907.31
+PoEnd -1675.37, 1807.54
+Wid1 100
+PoNumber1 9
+PoNumber2 10
+IdntBeg B
+IdntEnd A
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -1675.37, 1807.54
+PoEnd -577.4, 1808.97
+Wid1 100
+PoNumber1 10
+PoNumber2 11
+IdntBeg A
+IdntEnd T
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -577.4, 1808.97
+PoEnd -577.4, 1843.97
+Wid1 100
+PoNumber1 11
+PoNumber2 12
+JValue 35
+IdntBeg T
+IdntEnd S
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg -577.4, 1843.97
+PoEnd 494.55, 1843.97
+Wid1 100
+PoNumber1 12
+PoNumber2 13
+IdntBeg S
+IdntEnd R
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 494.55, 1843.97
+PoEnd 494.55, 1240.34
+Wid1 100
+PoNumber1 13
+PoNumber2 14
+IdntBeg R
+IdntEnd Q
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 494.55, 1240.34
+PoEnd 1342.75, 1240.34
+Wid1 100
+PoNumber1 14
+PoNumber2 15
+IdntBeg Q
+IdntEnd P
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 1342.75, 1240.34
+PoEnd 1342.75, 348.07
+Wid1 100
+PoNumber1 15
+PoNumber2 16
+IdntBeg P
+IdntEnd O
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 1342.75, 348.07
+PoEnd 499.76, 348.07
+Wid1 100
+PoNumber1 16
+PoNumber2 17
+IdntBeg O
+IdntEnd N
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 499.76, 348.07
+PoEnd 499.76, 288.07
+Wid1 100
+PoNumber1 17
+PoNumber2 18
+JValue 60
+IdntBeg N
+IdntEnd M
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 499.76, 288.07
+PoEnd 1332.34, 288.07
+Wid1 100
+PoNumber1 18
+PoNumber2 19
+IdntBeg M
+IdntEnd L
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+NPLine
+PoBeg 1332.34, 288.07
+PoEnd 1332.34, -1288.64
+Wid1 100
+PoNumber1 19
+IdntBeg L
+IdntEnd K
+IdntBeg2 
+IdntEnd2 
+FixedBeg False
+END
+otrlist_end
+dim_lines_
+dim_lines_end
+StartPointA 10
+VIREZS
+VIREZSEND
+GlobPlanX 0
+GlobPlanY 0
+ALLDIMLINES
+ALLDIMLINESEND
+GValsBegin
+A 0
+B 0
+C 0
+D 0
+E 0
+F 0
+I 0
+J 0
+G 0
+L 0
+M 0
+O 0
+P 0
+Q 0
+R 0
+GValsEnd
+GValSclad 0
+UseSclad False
+UpackID 0
+MontID 0
+RulonID 
+CWid1 0
+CHei1 0
+CWid2 0
+CHei2 0
+ROOMEND
