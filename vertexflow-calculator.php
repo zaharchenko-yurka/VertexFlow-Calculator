@@ -15,9 +15,15 @@ define('VERTEXFLOW_CALCULATOR_VERSION', '1.0.0');
 
 require_once plugin_dir_path(__FILE__) . 'includes/class-activator.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-deactivator.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin/settings-defaults.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin/class-admin-settings.php';
 
 register_activation_hook(__FILE__, ['VertexFlow_Calculator_Activator', 'activate']);
 register_deactivation_hook(__FILE__, ['VertexFlow_Calculator_Deactivator', 'deactivate']);
+
+if (is_admin()) {
+  new VertexFlow_Calculator_Admin_Settings();
+}
 
 function vertexflow_calculator_asset_version($relative_path) {
   $full_path = plugin_dir_path(__FILE__) . ltrim($relative_path, '/\\');
@@ -68,6 +74,13 @@ function vertexflow_calculator_enqueue_assets() {
     $app_version,
     true
   );
+
+  $settings = VertexFlow_Calculator_Admin_Settings::get_settings();
+  $reset_notice = VertexFlow_Calculator_Admin_Settings::consume_reset_notice();
+  wp_localize_script('vertexflow-calculator-app', 'vertexflowConfig', [
+    'settings' => $settings,
+    'settingsResetNotice' => $reset_notice
+  ]);
 }
 
 function vertexflow_calculator_shortcode() {

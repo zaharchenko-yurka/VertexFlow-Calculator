@@ -86,6 +86,11 @@ function initApp(container) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const resetNotice = window?.vertexflowConfig?.settingsResetNotice;
+  if (resetNotice) {
+    alert('Налаштування калькулятора було скинуто до значень за замовчуванням.');
+  }
+
   const container = document.getElementById('vertexflow-calculator');
   if (container) {
     initApp(container);
