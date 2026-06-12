@@ -4,9 +4,10 @@ import {
   SPLIT_THRESHOLD_SHORT,
   NEAR_ANGLE_SEGMENT,
   SHORT_INCREMENT_PERCENT,
-  NEAR_INCREMENT_MM
+  NEAR_INCREMENT_MM,
+  OPPOSITE_WALL_DISTANCE_THRESHOLD
 } from '../utils/config.js';
-import { distance, findCircleIntersection } from '../utils/geometryUtils.js';
+import { distance, findCircleIntersection, doesCircleIntersectSegment } from '../utils/geometryUtils.js';
 
 export const CONTOUR_TRANSFORMER_VERSION = '2026-03-17-fix-split-index-v2';
 
@@ -219,6 +220,49 @@ export function transformContour(contour, internalAngles, options = {}) {
         reason: 'SEGMENT_TOPOLOGY_MISMATCH'
       });
       return;
+    }
+
+    const prevSeg = updated.segments[prevSegIndex];
+    const nextSeg = updated.segments[nextSegIndex];
+    const prevLen = getSegmentLength(updated, prevSeg);
+    const nextLen = getSegmentLength(updated, nextSeg);
+
+    if (OPPOSITE_WALL_DISTANCE_THRESHOLD > 0 && updated.segments.length > 4) {
+      const segmentCount = updated.segments.length;
+      const prevSegPrev = (prevSegIndex - 1 + segmentCount) % segmentCount;
+      const nextSegNext = (nextSegIndex + 1) % segmentCount;
+      const ignoredSegIndices = new Set([prevSegPrev, prevSegIndex, nextSegIndex, nextSegNext]);
+
+      const circleRadius = OPPOSITE_WALL_DISTANCE_THRESHOLD;
+      const intersectsOtherSegments = updated.segments.some((seg, segIndex) => {
+        if (ignoredSegIndices.has(segIndex)) {
+          return false;
+        }
+        return doesCircleIntersectSegment(
+          currentVertex,
+          circleRadius,
+          updated.vertices[seg.startIndex],
+          updated.vertices[seg.endIndex]
+        );
+      });
+
+      if (intersectsOtherSegments) {
+        markSkipped(angle.vertexId);
+        transformations.push({
+          id: `t-narrow-strip-${currentIndex}`,
+          type: 'SKIPPED_NARROW_STRIP',
+          vertexIndex: currentIndex,
+          vertexName: currentVertex.name,
+          angleDegrees: angle.angle,
+          prevSegmentIndex: prevSegIndex,
+          nextSegmentIndex: nextSegIndex,
+          prevSegmentLength: prevLen,
+          nextSegmentLength: nextLen,
+          fallbackUsed: false,
+          reason: 'OPPOSITE_WALL_DISTANCE_THRESHOLD'
+        });
+        return;
+      }
     }
 
     if (skipColumns && idx + 1 < angleTargets.length) {
@@ -637,11 +681,6 @@ export function transformContour(contour, internalAngles, options = {}) {
       }
     }
 
-    const prevSeg = updated.segments[prevSegIndex];
-    const nextSeg = updated.segments[nextSegIndex];
-
-    const prevLen = getSegmentLength(updated, prevSeg);
-    const nextLen = getSegmentLength(updated, nextSeg);
     const minLen = Math.min(prevLen, nextLen);
 
     if (minLen < MIN_SKIP_LENGTH) {

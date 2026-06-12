@@ -10,8 +10,9 @@ function get_vertexflow_default_settings() {
     'min_skip_length' => 40,
     'split_threshold_short' => 110,
     'near_angle_segment' => 100,
-    'short_increment_percent' => 10,
     'near_increment_mm' => 20,
-    'default_stretch_percent' => 10
+    'short_increment_percent' => 10,
+    'default_stretch_percent' => 10,
+    'opposite_wall_distance_threshold' => 250
   ];
 }

@@ -7,6 +7,27 @@ export function distance(a, b) {
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
+export function pointToSegmentDistance(point, segStart, segEnd) {
+  const dx = segEnd.x - segStart.x;
+  const dy = segEnd.y - segStart.y;
+  const lengthSq = dx * dx + dy * dy;
+  if (lengthSq === 0) {
+    return distance(point, segStart);
+  }
+  let t = ((point.x - segStart.x) * dx + (point.y - segStart.y) * dy) / lengthSq;
+  t = Math.max(0, Math.min(1, t));
+  const projection = {
+    x: segStart.x + t * dx,
+    y: segStart.y + t * dy
+  };
+  return distance(point, projection);
+}
+
+export function doesCircleIntersectSegment(point, radius, segStart, segEnd) {
+  const dist = pointToSegmentDistance(point, segStart, segEnd);
+  return dist < radius;
+}
+
 export function computeAngle(prevPoint, currentPoint, nextPoint, clockwise = true) {
   const v1 = { x: prevPoint.x - currentPoint.x, y: prevPoint.y - currentPoint.y };
   const v2 = { x: nextPoint.x - currentPoint.x, y: nextPoint.y - currentPoint.y };

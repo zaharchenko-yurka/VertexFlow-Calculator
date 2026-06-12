@@ -225,6 +225,12 @@ class VertexFlow_Calculator_Admin_Settings {
         'label' => 'Усадка для стель зі спецрозкроєм (%)',
         'step' => '1',
         'min' => '0'
+      ],
+      [
+        'id' => 'opposite_wall_distance_threshold',
+        'label' => 'Пропускати якщо кут ближче до протилежної стіни ніж (мм)',
+        'step' => '1',
+        'min' => '0'
       ]
     ];
   }

@@ -3,9 +3,10 @@ const DEFAULT_SETTINGS = {
   min_skip_length: 40,
   split_threshold_short: 110,
   near_angle_segment: 100,
-  short_increment_percent: 10,
   near_increment_mm: 20,
-  default_stretch_percent: 10
+  short_increment_percent: 10,
+  default_stretch_percent: 10,
+  opposite_wall_distance_threshold: 250
 };
 
 function readSettings() {
@@ -43,17 +44,21 @@ export function getCalculatedConfig() {
       settings.near_angle_segment,
       DEFAULT_SETTINGS.near_angle_segment
     ),
-    short_increment_percent: normalizeNumber(
-      settings.short_increment_percent,
-      DEFAULT_SETTINGS.short_increment_percent
-    ),
     near_increment_mm: normalizeNumber(
       settings.near_increment_mm,
       DEFAULT_SETTINGS.near_increment_mm
     ),
+    short_increment_percent: normalizeNumber(
+      settings.short_increment_percent,
+      DEFAULT_SETTINGS.short_increment_percent
+    ),
     default_stretch_percent: normalizeNumber(
       settings.default_stretch_percent,
       DEFAULT_SETTINGS.default_stretch_percent
+    ),
+    opposite_wall_distance_threshold: normalizeNumber(
+      settings.opposite_wall_distance_threshold,
+      DEFAULT_SETTINGS.opposite_wall_distance_threshold
     )
   };
 }
@@ -67,6 +72,7 @@ export const NEAR_ANGLE_SEGMENT = calculatedConfig.near_angle_segment; // mm
 export const SHORT_INCREMENT_PERCENT = calculatedConfig.short_increment_percent; // percent
 export const NEAR_INCREMENT_MM = calculatedConfig.near_increment_mm; // mm
 export const DEFAULT_STRETCH_PERCENT = calculatedConfig.default_stretch_percent; // percent
+export const OPPOSITE_WALL_DISTANCE_THRESHOLD = calculatedConfig.opposite_wall_distance_threshold; // mm
 
 export const CIRCLE_INTERSECTION_EPSILON = 0.1; // mm
 export const CIRCLE_INTERSECTION_MAX_ITERATIONS = 1000;
@@ -82,6 +88,7 @@ export default {
   SHORT_INCREMENT_PERCENT,
   NEAR_INCREMENT_MM,
   DEFAULT_STRETCH_PERCENT,
+  OPPOSITE_WALL_DISTANCE_THRESHOLD,
   CIRCLE_INTERSECTION_EPSILON,
   CIRCLE_INTERSECTION_MAX_ITERATIONS,
   DEFAULT_ZOOM_MIN,
